@@ -1,10 +1,10 @@
 # API RESTful com PHP Puro 8.2
 
-## 📋 Sobre o Projeto
+## Sobre o Projeto
 
 Este projeto consiste no desenvolvimento de uma **API RESTful** utilizando **PHP puro 8.2**, sem frameworks externos, aplicando conceitos de **Clean Architecture** e **Clean Code**.
 
-## 🎯 Objetivos
+## Objetivos
 
 - Construir uma API robusta e escalável com PHP puro
 - Implementar autenticação e autorização com **JWT (JSON Web Tokens)**
@@ -12,7 +12,7 @@ Este projeto consiste no desenvolvimento de uma **API RESTful** utilizando **PHP
 - Seguir boas práticas de **Clean Code**
 - Demonstrar domínio de PHP moderno e padrões de projeto
 
-## 🛠️ Tecnologias
+## Tecnologias
 
 - **PHP 8.2** - Linguagem principal
 - **JWT** - Autenticação e autorização
@@ -20,7 +20,7 @@ Este projeto consiste no desenvolvimento de uma **API RESTful** utilizando **PHP
 - **Nginx** - Servidor web
 - **Composer** - Gerenciamento de dependências
 
-## 🏗️ Arquitetura
+## Arquitetura
 
 O projeto segue os princípios da **Clean Architecture**, com separação clara de responsabilidades:
 
@@ -39,7 +39,7 @@ api/
 └── index.php
 ```
 
-## ✨ Funcionalidades Implementadas
+## Funcionalidades Implementadas
 
 ### Core
 
@@ -70,7 +70,7 @@ api/
 - [x] Resposta 405 para métodos HTTP não permitidos
 - [x] Resposta 500 para handlers inválidos ou métodos não encontrados
 
-## 📋 Próximas Funcionalidades
+## Próximas Funcionalidades
 
 - [ ] Autenticação JWT
 - [ ] Middleware de autenticação
@@ -79,7 +79,7 @@ api/
 - [ ] Rate limiting
 - [ ] Documentação da API (Swagger/OpenAPI)
 
-## 🚀 Como Executar
+## Como Executar
 
 ### Pré-requisitos
 
@@ -114,7 +114,7 @@ composer install
 php -S localhost:8000
 ```
 
-## 📚 Princípios Aplicados
+## Princípios Aplicados
 
 ### Clean Architecture
 
@@ -129,7 +129,7 @@ php -S localhost:8000
 - Nomenclatura significativa
 - Comentários apenas quando necessário
 
-## 📖 Documentação da API
+## Documentação da API
 
 ### Endpoints Disponíveis
 
@@ -163,20 +163,20 @@ php -S localhost:8000
 
 - **Descrição**: Criar novo usuário
 - **Body**: JSON com dados do usuário
-- **Status**: 🚧 Em desenvolvimento
+- **Status**: Em desenvolvimento
 
 **PUT** `/api/v1/users/{id}`
 
 - **Descrição**: Atualizar usuário existente
 - **Parâmetros**: `id` - ID do usuário
 - **Body**: JSON com dados a serem atualizados
-- **Status**: 🚧 Em desenvolvimento
+- **Status**: Em desenvolvimento
 
 **DELETE** `/api/v1/users/{id}`
 
 - **Descrição**: Remover usuário
 - **Parâmetros**: `id` - ID do usuário
-- **Status**: 🚧 Em desenvolvimento
+- **Status**: Em desenvolvimento
 
 ### Formato de Resposta Padrão
 
@@ -230,7 +230,7 @@ fetch("http://localhost/api/v1/")
   .then((data) => console.log(data));
 ```
 
-## 🔐 Autenticação JWT
+## Autenticação JWT
 
 A API utilizará JWT para autenticação stateless:
 
@@ -239,10 +239,10 @@ A API utilizará JWT para autenticação stateless:
 - Refresh tokens para renovação
 - Expiração configurável
 
-## 📝 Licença
+## Licença
 
 Este projeto está sob a licença MIT.
 
-## 👨‍💻 Autor
+## Autor
 
 Desenvolvido como projeto de estudo de PHP moderno e arquitetura de software.
