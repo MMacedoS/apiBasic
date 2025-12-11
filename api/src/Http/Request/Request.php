@@ -16,10 +16,15 @@ class Request extends Singleton
         return $_SERVER['REQUEST_URI'];
     }
 
-    public static function getRequestData(): array
+    public static function all(): array
     {
         $input = file_get_contents('php://input');
         $data = json_decode($input, true);
+
+        $data = match (self::method()) {
+            'GET' => $_GET,
+            'POST', 'PUT', 'PATCH', 'DELETE' => $data
+        };
 
         return is_array($data) ? $data : [];
     }

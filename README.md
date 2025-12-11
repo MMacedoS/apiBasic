@@ -129,6 +129,100 @@ php -S localhost:8000
 - Nomenclatura significativa
 - Comentários apenas quando necessário
 
+## 📖 Documentação da API
+
+### Endpoints Disponíveis
+
+#### Home
+
+**GET** `/api/v1/`
+- **Descrição**: Endpoint de boas-vindas
+- **Resposta**: 
+```json
+{
+  "message": "Welcome to the Home Controller!"
+}
+```
+
+**GET** `/api/v1/ss`
+- **Descrição**: Endpoint alternativo de teste
+- **Resposta**: 
+```json
+{
+  "message": "Welcome to the Home Controller!"
+}
+```
+
+#### Usuários (Em desenvolvimento)
+
+**POST** `/api/v1/users`
+- **Descrição**: Criar novo usuário
+- **Body**: JSON com dados do usuário
+- **Status**: 🚧 Em desenvolvimento
+
+**PUT** `/api/v1/users/{id}`
+- **Descrição**: Atualizar usuário existente
+- **Parâmetros**: `id` - ID do usuário
+- **Body**: JSON com dados a serem atualizados
+- **Status**: 🚧 Em desenvolvimento
+
+**DELETE** `/api/v1/users/{id}`
+- **Descrição**: Remover usuário
+- **Parâmetros**: `id` - ID do usuário
+- **Status**: 🚧 Em desenvolvimento
+
+### Formato de Resposta Padrão
+
+Todas as respostas seguem o formato JSON:
+
+```json
+{
+  "data": {},
+  "message": "string",
+  "status": 200
+}
+```
+
+### Códigos de Status HTTP
+
+- `200` - Sucesso
+- `404` - Rota não encontrada
+- `405` - Método HTTP não permitido
+- `500` - Erro interno do servidor
+
+### Exemplos de Uso
+
+#### cURL
+
+```bash
+# GET request
+curl -X GET http://localhost/api/v1/
+
+# POST request
+curl -X POST http://localhost/api/v1/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe","email":"john@example.com"}'
+```
+
+#### PHP
+
+```php
+$ch = curl_init('http://localhost/api/v1/');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$response = curl_exec($ch);
+curl_close($ch);
+
+echo $response;
+```
+
+#### JavaScript (Fetch)
+
+```javascript
+fetch('http://localhost/api/v1/')
+  .then(response => response.json())
+  .then(data => console.log(data));
+```
+
 ## 🔐 Autenticação JWT
 
 A API utilizará JWT para autenticação stateless:
