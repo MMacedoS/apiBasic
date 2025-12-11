@@ -1,0 +1,27 @@
+# Vendor
+/api/vendor/
+
+# Environment
+/api/.env
+
+# Composer
+/api/composer.lock
+
+# IDE
+/.vscode/
+/.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/api/logs/
+
+# Cache
+/api/cache/
+/api/tmp/
