@@ -1,13 +1,13 @@
 <?php
 
-if (function_exists('dd')) {
-    function dd(...$args)
+if (!function_exists('dd')) {
+    function dd(...$params)
     {
-        foreach ($args as $arg) {
-            echo '<pre>';
-            var_dump($arg);
-            echo '</pre>';
+        echo '<pre>';
+        foreach ($params as $param) {
+            var_dump($param);
         }
-        exit(1);
+        echo '</pre>';
+        die();
     }
 }
