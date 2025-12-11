@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\v1\Home;
 
-class HomeController
+use App\Http\Controllers\Controller;
+use App\Http\Request\Request;
+
+class HomeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return ['message' => 'Welcome to the Home Controller'];
+        return $this->respondJson(['message' => 'Welcome to the Home Controller!']);
     }
 }

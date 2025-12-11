@@ -3,14 +3,16 @@
 namespace App\Core;
 
 use App\Config\Container;
+use App\Http\Request\Request;
+use App\Http\Request\Response;
 
 class Core
 {
-
     public static function dispatch(array $request): void
     {
-        $url = $_SERVER['REQUEST_URI'];
-        $methodUrl = $_SERVER['REQUEST_METHOD'];
+        $url = Request::url();
+        $methodUrl = Request::method();
+        $requestObject = Request::getInstance();
 
         $normalizedRequestUri = self::normalizePath($url);
 
@@ -34,27 +36,26 @@ class Core
                             $controller = Container::getInstance()->get($controllerName);
 
                             if (method_exists($controller, $methodName)) {
-                                $response = call_user_func_array([$controller, $methodName], $matches);
-                                header('Content-Type: application/json');
-                                echo json_encode($response);
+                                call_user_func_array([$controller, $methodName], array_merge([$requestObject], $matches));
                                 return;
                             }
-                            http_response_code(500);
-                            echo json_encode(['error' => 'Método do controlador não encontrado.']);
+                            Response::json(['error' => 'Método do controlador não encontrado.'], 500);
                             return;
                         }
                         if (is_callable($handler)) {
                             $response = call_user_func_array($handler, $matches);
-                            header('Content-Type: application/json');
-                            echo json_encode($response);
+                            Response::json($response);
                             return;
                         }
-                        http_response_code(500);
-                        echo json_encode(['error' => 'Handler inválido.']);
+                        Response::json(['error' => 'Handler inválido.'], 500);
                         return;
                     }
+                    Response::json(['error' => 'Rota não encontrada.'], 404);
+                    return;
                 }
             }
+            Response::json(['error' => 'Method não permitido.'], 405);
+            return;
         }
     }
 

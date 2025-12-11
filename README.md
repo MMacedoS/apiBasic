@@ -39,16 +39,45 @@ api/
 └── index.php
 ```
 
-## ✨ Funcionalidades Planejadas
+## ✨ Funcionalidades Implementadas
 
-- [x] Sistema de roteamento customizado
-- [x] Container de injeção de dependências (DI)
+### Core
+
+- [x] Sistema de roteamento customizado com suporte a parâmetros dinâmicos
+- [x] Container de injeção de dependências (DI) com Singleton pattern
+- [x] Normalização automática de URLs (remoção de trailing slashes)
+- [x] Dispatcher para resolução de rotas e controladores
+
+### HTTP
+
+- [x] Classe `Request` (Singleton) para manipulação de requisições
+  - Métodos: `method()`, `url()`, `getRequestData()`
+- [x] Classe `Response` para padronização de respostas JSON
+  - Método: `json($data, $statusCode)`
+- [x] Controller base com método `respondJson()`
+- [x] Injeção automática do objeto Request nos controladores
+
+### Arquitetura
+
+- [x] Clean Architecture com separação de camadas
+- [x] Autoloading PSR-4 via Composer
+- [x] Padrão Singleton para classes compartilhadas
+- [x] Reflection API para injeção de dependências automática
+
+### Tratamento de Erros
+
+- [x] Resposta 404 para rotas não encontradas
+- [x] Resposta 405 para métodos HTTP não permitidos
+- [x] Resposta 500 para handlers inválidos ou métodos não encontrados
+
+## 📋 Próximas Funcionalidades
+
 - [ ] Autenticação JWT
 - [ ] Middleware de autenticação
 - [ ] CRUD de recursos
 - [ ] Validação de dados
-- [ ] Tratamento de erros
-- [ ] Documentação da API
+- [ ] Rate limiting
+- [ ] Documentação da API (Swagger/OpenAPI)
 
 ## 🚀 Como Executar
 
