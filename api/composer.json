@@ -2,6 +2,12 @@
   "autoload": {
     "psr-4": {
       "App\\": "src/"
-    }
+    },
+    "files": [
+      "App/Utils/Helpers.php"
+    ]
+  },
+  "require": {
+    "vlucas/phpdotenv": "^5.6"
   }
 }

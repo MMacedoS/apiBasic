@@ -2,14 +2,21 @@
 
 namespace App\Repositories\Entities\Users;
 
+use App\Config\Database;
 use App\Config\Singleton;
+use App\Models\Users\User;
 use App\Repositories\Contracts\Users\IUserRepository;
+use App\Repositories\Traits\FindTrait;
 
 class UserRepository extends Singleton implements IUserRepository
 {
+    use FindTrait;
+
     public function __construct()
     {
-        return parent::__construct();
+        $this->model = new User();
+        $this->conn =  Database::getInstance()->getConnection();
+        dd('UserRepository instantiated');
     }
 
     public function findAll(array $criteria = [])
@@ -28,13 +35,6 @@ class UserRepository extends Singleton implements IUserRepository
         ];
     }
 
-    public function findById(int $id)
-    {
-        // Implementação para obter um usuário por ID
-        return null;
-    }
-
-
     public function create(array $data)
     {
         // Implementação para criar um novo usuário
@@ -52,12 +52,6 @@ class UserRepository extends Singleton implements IUserRepository
     {
         // Implementação para deletar um usuário
         return false;
-    }
-
-    public function findByUuid(string $uuid)
-    {
-        // Implementação para obter um usuário por UUID
-        return null;
     }
 
     public function authenticate(string $email, string $password)
