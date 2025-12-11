@@ -2,7 +2,7 @@
 
 namespace App\Repositories\Contracts\Users;
 
-use App\Repositories\BaseInterface;
+use App\Repositories\Contracts\BaseInterface;
 
 interface IUserRepository extends BaseInterface
 {

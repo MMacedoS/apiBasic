@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Repositories\Entities;
+namespace App\Repositories\Entities\Users;
 
 use App\Config\Singleton;
 use App\Repositories\Contracts\Users\IUserRepository;
@@ -14,8 +14,18 @@ class UserRepository extends Singleton implements IUserRepository
 
     public function findAll(array $criteria = [])
     {
-        // Implementação para obter todos os usuários
-        return [];
+        return [
+            [
+                'id' => 1,
+                'name' => 'John Doe',
+                'email' => 'john.doe@gmail.com'
+            ],
+            [
+                'id' => 2,
+                'name' => 'Jane Smith',
+                'email' => 'jane.smith@gmail.com'
+            ]
+        ];
     }
 
     public function findById(int $id)

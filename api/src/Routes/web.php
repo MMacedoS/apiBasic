@@ -2,12 +2,15 @@
 
 use App\Config\Route;
 use App\Http\Controllers\v1\Home\HomeController;
+use App\Http\Controllers\v1\Users\UserController;
 
 Route::get('/', [HomeController::class, 'index']);
 
-Route::get('/ss', function () {
-    return ['message' => 'This is a test route'];
+Route::get('/health', function () {
+    return ['message' => 'This API is healthy'];
 });
+
+Route::get('/users', [UserController::class, 'index']);
 
 Route::post('/users', function () {
     // Handler for POST /api/v1/users

@@ -2,6 +2,7 @@
 
 namespace App\Core;
 
+use App\Config\AppProvider;
 use App\Config\Container;
 use App\Http\Request\Request;
 use App\Http\Request\Response;
@@ -33,7 +34,9 @@ class Core
                             $controllerName = $handler[0];
                             $methodName = $handler[1];
 
-                            $controller = Container::getInstance()->get($controllerName);
+                            $controller = Container::getInstance();
+                            AppProvider::registerServices($controller);
+                            $controller = $controller->get($controllerName);
 
                             if (method_exists($controller, $methodName)) {
                                 call_user_func_array([$controller, $methodName], array_merge([$requestObject], $matches));
@@ -50,8 +53,6 @@ class Core
                         Response::json(['error' => 'Handler inválido.'], 500);
                         return;
                     }
-                    Response::json(['error' => 'Rota não encontrada.'], 404);
-                    return;
                 }
             }
             Response::json(['error' => 'Method não permitido.'], 405);
