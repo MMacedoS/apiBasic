@@ -5,19 +5,26 @@ namespace App\Http\Controllers\v1\Users;
 use App\Http\Controllers\Controller;
 use App\Http\Request\Request;
 use App\Repositories\Contracts\Users\IUserRepository;
+use App\Transformers\Users\UserTransformer;
 
 class UserController extends Controller
 {
     private IUserRepository $userRepository;
+    private UserTransformer $userTransformer;
 
-    public function __construct(IUserRepository $userRepository)
-    {
+    public function __construct(
+        IUserRepository $userRepository,
+        UserTransformer $userTransformer
+    ) {
         $this->userRepository = $userRepository;
+        $this->userTransformer = $userTransformer;
     }
 
     public function index(Request $request)
     {
         $users = $this->userRepository->findAll();
+        $users = $this->userTransformer->transformCollection($users);
+
         return $this->respondJson([
             'message' => 'Lista de usuários',
             'data' => $users

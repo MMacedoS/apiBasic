@@ -16,23 +16,6 @@ class UserRepository extends Singleton implements IUserRepository
     {
         $this->model = new User();
         $this->conn =  Database::getInstance()->getConnection();
-        dd('UserRepository instantiated');
-    }
-
-    public function findAll(array $criteria = [])
-    {
-        return [
-            [
-                'id' => 1,
-                'name' => 'John Doe',
-                'email' => 'john.doe@gmail.com'
-            ],
-            [
-                'id' => 2,
-                'name' => 'Jane Smith',
-                'email' => 'jane.smith@gmail.com'
-            ]
-        ];
     }
 
     public function create(array $data)
