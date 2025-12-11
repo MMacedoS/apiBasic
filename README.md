@@ -136,8 +136,10 @@ php -S localhost:8000
 #### Home
 
 **GET** `/api/v1/`
+
 - **Descrição**: Endpoint de boas-vindas
-- **Resposta**: 
+- **Resposta**:
+
 ```json
 {
   "message": "Welcome to the Home Controller!"
@@ -145,8 +147,10 @@ php -S localhost:8000
 ```
 
 **GET** `/api/v1/ss`
+
 - **Descrição**: Endpoint alternativo de teste
-- **Resposta**: 
+- **Resposta**:
+
 ```json
 {
   "message": "Welcome to the Home Controller!"
@@ -156,17 +160,20 @@ php -S localhost:8000
 #### Usuários (Em desenvolvimento)
 
 **POST** `/api/v1/users`
+
 - **Descrição**: Criar novo usuário
 - **Body**: JSON com dados do usuário
 - **Status**: 🚧 Em desenvolvimento
 
 **PUT** `/api/v1/users/{id}`
+
 - **Descrição**: Atualizar usuário existente
 - **Parâmetros**: `id` - ID do usuário
 - **Body**: JSON com dados a serem atualizados
 - **Status**: 🚧 Em desenvolvimento
 
 **DELETE** `/api/v1/users/{id}`
+
 - **Descrição**: Remover usuário
 - **Parâmetros**: `id` - ID do usuário
 - **Status**: 🚧 Em desenvolvimento
@@ -218,9 +225,9 @@ echo $response;
 #### JavaScript (Fetch)
 
 ```javascript
-fetch('http://localhost/api/v1/')
-  .then(response => response.json())
-  .then(data => console.log(data));
+fetch("http://localhost/api/v1/")
+  .then((response) => response.json())
+  .then((data) => console.log(data));
 ```
 
 ## 🔐 Autenticação JWT
