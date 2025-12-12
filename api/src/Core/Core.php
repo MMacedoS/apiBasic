@@ -55,8 +55,6 @@ class Core
                     }
                 }
             }
-            Response::json(['error' => 'Method não permitido.'], 405);
-            return;
         }
     }
 
