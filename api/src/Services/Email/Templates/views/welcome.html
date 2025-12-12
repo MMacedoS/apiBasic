@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bem-vindo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 50px auto;
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .header h1 {
+        color: #333333;
+        font-size: 28px;
+        margin: 0;
+      }
+      .content {
+        color: #555555;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .button {
+        display: inline-block;
+        margin: 30px 0;
+        padding: 12px 30px;
+        background-color: #007bff;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      .button:hover {
+        background-color: #0056b3;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 40px;
+        font-size: 12px;
+        color: #999999;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Bem-vindo, {{ name }}!</h1>
+      </div>
+      <div class="content">
+        <p>Obrigado por se cadastrar em {{ app_name }}.</p>
+        <p>
+          Estamos felizes em tê-lo conosco. Sua conta foi criada com sucesso e
+          você já pode começar a usar nossos serviços.
+        </p>
+        <p style="text-align: center">
+          <a href="{{ action_url }}" class="button">Confirme Agora</a>
+        </p>
+        <p>
+          Se você tiver alguma dúvida, não hesite em entrar em contato com nossa
+          equipe de suporte.
+        </p>
+      </div>
+      <div class="footer">
+        <p>&copy; {{ year }} {{ app_name }}. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </body>
+</html>
