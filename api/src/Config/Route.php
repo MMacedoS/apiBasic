@@ -37,11 +37,6 @@ class Route
         array_pop(self::$groupStack);
     }
 
-    public static function middlewares(array $middlewares, callable $callback): void
-    {
-        self::group(['middleware' => $middlewares], $callback);
-    }
-
     private static function addRoute(string $method, string $path, mixed $handler): void
     {
         $middlewares = self::getGroupMiddlewares();
