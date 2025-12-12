@@ -101,9 +101,9 @@ class UserController extends Controller
             ], 422);
         }
 
-        $data = $this->userTransformer->keysTransform($data);
+        $data = $this->userTransformer->keysTransform($validatedData);
 
-        $updatedUser = $this->userRepository->update($user->id, $validatedData);
+        $updatedUser = $this->userRepository->update($user->id, $data);
 
         if (is_null($updatedUser)) {
             return $this->respondJson([
