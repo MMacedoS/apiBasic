@@ -52,6 +52,10 @@ trait Validators
 
     protected function min($field, $min)
     {
+        if (!isset($this->data[$field])) {
+            return;
+        }
+
         if ($this->opcional && !isset($this->data[$field])) {
             if (strlen((string)$this->data[$field]) < $min) {
                 $this->errors[$field][] = "O campo $field deve ter no mínimo $min caracteres.";
@@ -67,6 +71,10 @@ trait Validators
 
     protected function max($field, $max)
     {
+        if (!isset($this->data[$field])) {
+            return;
+        }
+
         if ($this->opcional && !isset($this->data[$field])) {
             if (strlen((string)$this->data[$field]) > $max) {
                 $this->errors[$field][] = "Este campo deve ter no máximo $max caracteres.";
@@ -128,7 +136,10 @@ trait Validators
             return;
         }
 
-        [$table, $column, $exceptId] = explode(',', $tableField);
+        $parts = explode(',', $tableField);
+        $table = $parts[0] ?? null;
+        $column = $parts[1] ?? null;
+        $exceptId = $parts[2] ?? null;
 
         $repository = $this->prepareRepository($table);
         if ($repository === null) {

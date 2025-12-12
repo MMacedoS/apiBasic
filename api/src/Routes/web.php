@@ -20,5 +20,5 @@ Route::group(['middleware' => ['auth']], function () {
     Route::put('/users/{id}', [UserController::class, 'update']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
     Route::get('/profile', [UserController::class, 'profile']);
-    Route::put('/profile', [UserController::class, 'updateProfile']);
+    Route::put('/profile', [UserController::class, 'profileUpdate']);
 });

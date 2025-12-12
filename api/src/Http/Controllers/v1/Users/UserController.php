@@ -121,9 +121,23 @@ class UserController extends Controller
 
     public function destroy(Request $request, $id)
     {
+        $user = $this->userRepository->findByUuid($id);
+
+        if (is_null($user)) {
+            return $this->respondJson([
+                'message' => 'Usuário não encontrado'
+            ], 422);
+        }
+
+        $deleted = $this->userRepository->delete($user->id);
+
+        if (!$deleted) {
+            return $this->respondJson([
+                'message' => 'Erro ao deletar usuário'
+            ], 500);
+        }
         return $this->respondJson([
-            'message' => 'Usuário removido com sucesso',
-            'data' => ['id' => $id]
+            'message' => 'Usuário deletado com sucesso'
         ]);
     }
 
@@ -206,6 +220,59 @@ class UserController extends Controller
 
         return $this->respondJson([
             'message' => 'Logout realizado com sucesso',
+        ]);
+    }
+
+    public function profileUpdate(Request $request)
+    {
+        $userPayload = $request->header('Authorization');
+
+        $userPayload = JWT::validateToken($userPayload);
+
+        if (is_null($userPayload)) {
+            return $this->respondJson([
+                'message' => 'Usuário não autenticado'
+            ], 401);
+        }
+
+        $user = $this->userRepository->findById((int)$userPayload['code']);
+
+        if (is_null($user)) {
+            return $this->respondJson([
+                'message' => 'Usuário não encontrado'
+            ], 404);
+        }
+
+        $data = $request->all();
+
+        $validatedData = $this->validate($data, [
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'password' => 'sometimes|string|min:6'
+        ]);
+
+        if (is_null($validatedData)) {
+            return $this->respondJson([
+                'message' => 'Dados inválidos',
+                'errors' => $this->getErrors()
+            ], 422);
+        }
+
+        $data = $this->userTransformer->keysTransform($validatedData);
+
+        $updatedUser = $this->userRepository->update($user->id, $data);
+
+        if (is_null($updatedUser)) {
+            return $this->respondJson([
+                'message' => 'Erro ao atualizar usuário'
+            ], 500);
+        }
+
+        $updatedUser = $this->userTransformer->transform($updatedUser);
+
+        return $this->respondJson([
+            'message' => 'Usuário atualizado com sucesso',
+            'data' =>  $updatedUser
         ]);
     }
 }

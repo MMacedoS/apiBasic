@@ -25,16 +25,17 @@ class User
 
     public function fill(array $data): User
     {
-        $this->id = $data['id'] ?? 0;
-        $this->uuid = $data['uuid'] ?? $this->generateUuid();
-        $this->nome = $data['nome'] ?? '';
-        $this->email = $data['email'] ?? '';
-        $this->senha = $data['senha'] ?? '';
-        $this->acesso = $data['acesso'] ?? '';
-        $this->situacao = $data['situacao'] ?? '';
-        $this->created_at = $data['created_at'] ?? '';
-        $this->updated_at = $data['updated_at'] ?? '';
+        $user = new User();
+        $user->id = $data['id'] ?? 0;
+        $user->uuid = $data['uuid'] ?? $this->generateUuid();
+        $user->nome = $data['nome'] ?? '';
+        $user->email = $data['email'] ?? '';
+        $user->senha = $data['senha'] ?? '';
+        $user->acesso = $data['acesso'] ?? '';
+        $user->situacao = $data['situacao'] ?? '';
+        $user->created_at = $data['created_at'] ?? '';
+        $user->updated_at = $data['updated_at'] ?? '';
 
-        return $this;
+        return $user;
     }
 }
