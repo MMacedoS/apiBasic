@@ -8,6 +8,7 @@ trait Validators
 {
     protected array $data = [];
     protected array $errors = [];
+    protected bool $opcional = false;
 
     public static function uuid(string $uuid): bool
     {
@@ -44,8 +45,21 @@ trait Validators
         }
     }
 
+    private function sometimes($field)
+    {
+        $this->opcional = true;
+    }
+
     protected function min($field, $min)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            if (strlen((string)$this->data[$field]) < $min) {
+                $this->errors[$field][] = "O campo $field deve ter no mínimo $min caracteres.";
+            }
+
+            return;
+        }
+
         if (!isset($this->data[$field]) || strlen((string)$this->data[$field]) < $min) {
             $this->errors[$field][] = "O campo $field deve ter no mínimo $min caracteres.";
         }
@@ -53,19 +67,31 @@ trait Validators
 
     protected function max($field, $max)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            if (strlen((string)$this->data[$field]) > $max) {
+                $this->errors[$field][] = "Este campo deve ter no máximo $max caracteres.";
+            }
+            return;
+        }
+
         if (isset($this->data[$field]) && strlen((string)$this->data[$field]) > $max) {
             $this->errors[$field][] = "Este campo deve ter no máximo $max caracteres.";
         }
+        $this->opcional = false;
     }
 
     protected function email($field)
     {
         if (!isset($this->data[$field])) {
+            return;
+        }
+
+        if (!$this->opcional && !isset($this->data[$field])) {
             $this->errors[$field][] = "O campo $field não pode esta vazio.";
             return;
         }
 
-        if (!filter_var($this->data[$field], FILTER_VALIDATE_EMAIL)) {
+        if (!isset($this->data[$field]) || !filter_var($this->data[$field], FILTER_VALIDATE_EMAIL)) {
             $this->errors[$field][] = "O campo $field deve ser um endereço de email válido.";
             return;
         }
@@ -73,6 +99,13 @@ trait Validators
 
     protected function integer($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            if (!filter_var($this->data[$field], FILTER_VALIDATE_INT)) {
+                $this->errors[$field][] = "O campo $field deve ser um número inteiro.";
+            }
+            return;
+        }
+
         if (!isset($this->data[$field])) {
             $this->errors[$field][] = "O campo $field não pode esta vazio.";
             return;
@@ -87,25 +120,61 @@ trait Validators
     protected function unique($field, $tableField)
     {
         if (!isset($this->data[$field])) {
+            return;
+        }
+
+        if (!$this->opcional && !isset($this->data[$field])) {
             $this->errors[$field][] = "O campo $field não pode estar vazio.";
             return;
         }
 
-        [$table, $column] = explode(',', $tableField);
+        [$table, $column, $exceptId] = explode(',', $tableField);
+
         $repository = $this->prepareRepository($table);
         if ($repository === null) {
             $this->errors[$field][] = "Repositório para a tabela $table não encontrado.";
             return;
         }
-        $exists = $repository->existsByField($column, $this->data[$field]);
+        $exists = $repository
+            ->existsByField(
+                $column,
+                $this->data[$field]
+            );
         if ($exists) {
+            if (!empty($exceptId)) {
+                $item = $repository->findById($exceptId);
+                if (!is_null($item)) {
+                    return;
+                }
+            }
             $this->errors[$field][] = "O valor do campo $field já está em uso.";
+            return;
+        }
+    }
+
+    private function float($field)
+    {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
+        if (!isset($this->data[$field])) {
+            $this->errors[$field][] = "O campo $field não pode estar vazio.";
+            return;
+        }
+
+        if (!filter_var($this->data[$field], FILTER_VALIDATE_FLOAT)) {
+            $this->errors[$field][] = "O campo $field deve ser um número decimal.";
             return;
         }
     }
 
     private function string($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field]) || !is_string($this->data[$field])) {
             $this->errors[$field][] = "O campo $field deve ser uma string.";
             return;
@@ -114,6 +183,10 @@ trait Validators
 
     private function boolean($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field]) || !is_bool($this->data[$field])) {
             $this->errors[$field][] = "O campo $field deve ser um valor booleano.";
             return;
@@ -122,6 +195,10 @@ trait Validators
 
     private function date($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field]) || strtotime($this->data[$field]) === false) {
             $this->errors[$field][] = "O campo $field deve ser uma data válida.";
             return;
@@ -130,6 +207,10 @@ trait Validators
 
     private function array($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field]) || !is_array($this->data[$field])) {
             $this->errors[$field][] = "O campo $field deve ser um array.";
             return;
@@ -138,10 +219,15 @@ trait Validators
 
     private function json($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field])) {
             $this->errors[$field][] = "O campo $field não pode estar vazio.";
             return;
         }
+
         json_decode($this->data[$field]);
         if (json_last_error() !== JSON_ERROR_NONE) {
             $this->errors[$field][] = "O campo $field deve ser um JSON válido.";
@@ -151,6 +237,10 @@ trait Validators
 
     private function url($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field]) || !filter_var($this->data[$field], FILTER_VALIDATE_URL)) {
             $this->errors[$field][] = "O campo $field deve ser uma URL válida.";
             return;
@@ -159,6 +249,10 @@ trait Validators
 
     private function ip($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field]) || !filter_var($this->data[$field], FILTER_VALIDATE_IP)) {
             $this->errors[$field][] = "O campo $field deve ser um endereço IP válido.";
             return;
@@ -167,6 +261,10 @@ trait Validators
 
     private function slug($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field]) || !preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $this->data[$field])) {
             $this->errors[$field][] = "O campo $field deve ser um slug válido.";
             return;
@@ -175,6 +273,10 @@ trait Validators
 
     private function alpha($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field]) || !preg_match('/^[a-zA-Z]+$/', $this->data[$field])) {
             $this->errors[$field][] = "O campo $field deve conter apenas letras.";
             return;
@@ -183,6 +285,10 @@ trait Validators
 
     private function alpha_num($field)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field]) || !preg_match('/^[a-zA-Z0-9]+$/', $this->data[$field])) {
             $this->errors[$field][] = "O campo $field deve conter apenas letras e números.";
             return;
@@ -191,10 +297,15 @@ trait Validators
 
     private function date_format($field, $format)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field])) {
             $this->errors[$field][] = "O campo $field não pode estar vazio.";
             return;
         }
+
         $date = \DateTime::createFromFormat($format, $this->data[$field]);
         if (!$date || $date->format($format) !== $this->data[$field]) {
             $this->errors[$field][] = "O campo $field deve estar no formato $format.";
@@ -204,6 +315,10 @@ trait Validators
 
     private function exists($field, $tableField)
     {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
         if (!isset($this->data[$field])) {
             $this->errors[$field][] = "O campo $field não pode estar vazio.";
             return;
