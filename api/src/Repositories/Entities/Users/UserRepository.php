@@ -49,8 +49,53 @@ class UserRepository extends Singleton implements IUserRepository
 
     public function update(int $id, array $data)
     {
-        // Implementação para atualizar um usuário existente
-        return null;
+        if (empty($data) || is_null($id) || $id <= 0) {
+            return null;
+        }
+
+        try {
+            $user = $this->model->fill($data);
+            $fieldsToUpdate = [];
+            $params = [];
+
+            if (!empty($user->nome)) {
+                $fieldsToUpdate[] = 'nome = :name';
+                $params[':name'] = $user->nome;
+            }
+            if (!empty($user->email)) {
+                $fieldsToUpdate[] = 'email = :email';
+                $params[':email'] = $user->email;
+            }
+            if (!empty($user->senha)) {
+                $fieldsToUpdate[] = 'senha = :password';
+                $hashedPassword = password_hash($user->senha, PASSWORD_BCRYPT);
+                $params[':password'] = $hashedPassword;
+            }
+            if (!empty($user->acesso)) {
+                $fieldsToUpdate[] = 'acesso = :access';
+                $params[':access'] = $user->acesso;
+            }
+            if (!empty($user->situacao)) {
+                $fieldsToUpdate[] = 'situacao = :status';
+                $params[':status'] = $user->situacao;
+            }
+
+            if (empty($fieldsToUpdate)) {
+                return $this->findById($id);
+            }
+
+            $query = "UPDATE {$this->model->getTable()} SET " . implode(', ', $fieldsToUpdate) . " WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            foreach ($params as $param => $value) {
+                $stmt->bindValue($param, $value);
+            }
+            $stmt->bindValue(':id', $id);
+            $stmt->execute();
+
+            return $this->findById($id);
+        } catch (\Throwable $th) {
+            return null;
+        }
     }
 
     public function delete(int $id)

@@ -75,13 +75,47 @@ class UserController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, string $uuid)
     {
+        $user = $this->userRepository->findByUuid($uuid);
+
+        if (is_null($user)) {
+            return $this->respondJson([
+                'message' => 'Usuário não encontrado'
+            ], 422);
+        }
+
         $data = $request->all();
+
+        $validatedData = $this->validate($data, [
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'access' => 'sometimes|string',
+            'status' => 'sometimes|string'
+        ]);
+
+        if (is_null($validatedData)) {
+            return $this->respondJson([
+                'message' => 'Dados inválidos',
+                'errors' => $this->getErrors()
+            ], 422);
+        }
+
+        $data = $this->userTransformer->keysTransform($data);
+
+        $updatedUser = $this->userRepository->update($user->id, $validatedData);
+
+        if (is_null($updatedUser)) {
+            return $this->respondJson([
+                'message' => 'Erro ao atualizar usuário'
+            ], 500);
+        }
+
+        $updatedUser = $this->userTransformer->transform($updatedUser);
 
         return $this->respondJson([
             'message' => 'Usuário atualizado com sucesso',
-            'data' => array_merge(['id' => $id], $data)
+            'data' =>  $updatedUser
         ]);
     }
 
