@@ -130,13 +130,41 @@ class UserController extends Controller
         ]);
     }
 
+    public function profile(Request $request)
+    {
+        $userPayload = $request->header('Authorization');
+
+        $userPayload = JWT::validateToken($userPayload);
+
+        if (is_null($userPayload)) {
+            return $this->respondJson([
+                'message' => 'Usuário não autenticado'
+            ], 401);
+        }
+
+        $user = $this->userRepository->findById((int)$userPayload['code']);
+
+        if (is_null($user)) {
+            return $this->respondJson([
+                'message' => 'Usuário não encontrado'
+            ], 404);
+        }
+
+        $userPayload = $this->userTransformer->transform($user);
+
+        return $this->respondJson([
+            'message' => 'Perfil do usuário',
+            'data' => $userPayload
+        ]);
+    }
+
     public function logout(Request $request)
     {
         $token = $request->header('Authorization');
 
         if (is_null($token)) {
             return $this->respondJson([
-                'message' => 'Token não fornecido'
+                'message' => 'autorização não fornecida'
             ], 400);
         }
 

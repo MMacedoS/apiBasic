@@ -10,17 +10,15 @@ Route::get('/health', function () {
     return ['message' => 'This API is healthy'];
 });
 
-Route::get('/users', [UserController::class, 'index']);
-
-Route::post('/users', [UserController::class, 'store']);
-
-Route::put('/users/{id}', function ($id) {
-    // Handler for PUT /api/v1/users/{id}
-});
-
-Route::delete('/users/{id}', function ($id) {
-    // Handler for DELETE /api/v1/users/{id}
-});
-
 Route::post('/login', [UserController::class, 'authenticate']);
-Route::post('/logout', [UserController::class, 'logout']);
+
+Route::group(['middleware' => ['auth']], function () {
+    Route::post('/logout', [UserController::class, 'logout']);
+
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    Route::get('/profile', [UserController::class, 'profile']);
+    Route::put('/profile', [UserController::class, 'updateProfile']);
+});

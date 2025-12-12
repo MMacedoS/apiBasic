@@ -6,6 +6,8 @@ use App\Config\Singleton;
 
 class Request extends Singleton
 {
+    private ?array $user = null;
+
     public static function method()
     {
         return $_SERVER['REQUEST_METHOD'];
@@ -32,9 +34,22 @@ class Request extends Singleton
     public function header(string $key): ?string
     {
         $headers = getallheaders();
-        $tokenHeader = $headers[$key];
+        $tokenHeader = $headers[$key] ?? null;
+        if (is_null($tokenHeader)) {
+            return null;
+        }
         $token = str_replace('Bearer ', '', $tokenHeader);
 
         return $token ?? null;
+    }
+
+    public function setUser(array $user): void
+    {
+        $this->user = $user;
+    }
+
+    public function user(): ?array
+    {
+        return $this->user;
     }
 }

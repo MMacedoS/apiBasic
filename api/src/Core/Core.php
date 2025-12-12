@@ -30,9 +30,26 @@ class Core
 
                     if (preg_match($patternPath, $normalizedRequestUri, $matches)) {
                         array_shift($matches);
-                        if (is_array($handler)) {
-                            $controllerName = $handler[0];
-                            $methodName = $handler[1];
+
+                        $routeHandler = $handler;
+                        $middlewares = [];
+
+                        if (is_array($handler) && isset($handler['handler'])) {
+                            $routeHandler = $handler['handler'];
+                            $middlewares = $handler['middlewares'] ?? [];
+                        }
+
+                        if (!empty($middlewares)) {
+                            $middlewareResponse = self::runMiddlewares($requestObject, $middlewares);
+                            if ($middlewareResponse !== null) {
+                                Response::json($middlewareResponse['body'], $middlewareResponse['status']);
+                                return;
+                            }
+                        }
+
+                        if (is_array($routeHandler) && isset($routeHandler[0]) && isset($routeHandler[1])) {
+                            $controllerName = $routeHandler[0];
+                            $methodName = $routeHandler[1];
 
                             $controller = Container::getInstance();
                             AppProvider::registerServices($controller);
@@ -45,8 +62,8 @@ class Core
                             Response::json(['error' => 'Método do controlador não encontrado.'], 500);
                             return;
                         }
-                        if (is_callable($handler)) {
-                            $response = call_user_func_array($handler, $matches);
+                        if (is_callable($routeHandler)) {
+                            $response = call_user_func_array($routeHandler, $matches);
                             Response::json($response);
                             return;
                         }
@@ -59,10 +76,34 @@ class Core
     }
 
 
+    private static function runMiddlewares($request, array $middlewares): ?array
+    {
+        foreach ($middlewares as $middleware) {
+            $middlewareClass = "App\\Http\\Controllers\\Middleware\\" . ucfirst($middleware);
+
+            if (!class_exists($middlewareClass)) {
+                return [
+                    'status' => 500,
+                    'body' => ['error' => "Middleware {$middleware} não encontrado."]
+                ];
+            }
+
+            $next = function ($req) {
+                return null;
+            };
+            $result = $middlewareClass::handle($request, $next);
+
+            if ($result !== null) {
+                return $result;
+            }
+        }
+
+        return null;
+    }
+
     private static function normalizePath($path)
     {
         $normalized = rtrim(parse_url($path, PHP_URL_PATH), '/');
-        // Se o caminho era só "/", mantém ele
         return $normalized === '' ? '/' : $normalized;
     }
 }
