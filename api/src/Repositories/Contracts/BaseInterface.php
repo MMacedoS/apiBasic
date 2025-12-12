@@ -10,4 +10,5 @@ interface BaseInterface
     public function findById(int $id);
     public function findAll(array $criteria = []);
     public function findByUuid(string $uuid);
+    public function existsByField(string $field, $value): bool;
 }

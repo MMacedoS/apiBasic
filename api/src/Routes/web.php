@@ -12,9 +12,7 @@ Route::get('/health', function () {
 
 Route::get('/users', [UserController::class, 'index']);
 
-Route::post('/users', function () {
-    // Handler for POST /api/v1/users
-});
+Route::post('/users', [UserController::class, 'store']);
 
 Route::put('/users/{id}', function ($id) {
     // Handler for PUT /api/v1/users/{id}
@@ -23,3 +21,6 @@ Route::put('/users/{id}', function ($id) {
 Route::delete('/users/{id}', function ($id) {
     // Handler for DELETE /api/v1/users/{id}
 });
+
+Route::post('/login', [UserController::class, 'authenticate']);
+Route::post('/logout', [UserController::class, 'logout']);

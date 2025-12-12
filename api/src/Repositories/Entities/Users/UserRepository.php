@@ -20,8 +20,30 @@ class UserRepository extends Singleton implements IUserRepository
 
     public function create(array $data)
     {
-        // Implementação para criar um novo usuário
-        return [];
+        if (empty($data)) {
+            return null;
+        }
+
+        try {
+            $user = $this->model->fill($data);
+            $hashedPassword = password_hash($user->senha, PASSWORD_BCRYPT);
+            $query = "INSERT INTO 
+                {$this->model->getTable()} 
+                    (uuid, nome, email, senha) 
+                VALUES 
+                    (:uuid, :name, :email, :password)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':uuid', $user->uuid);
+            $stmt->bindParam(':name', $user->nome);
+            $stmt->bindParam(':email', $user->email);
+            $stmt->bindParam(':password', $hashedPassword);
+            $stmt->execute();
+
+            return $this->findByUuid($user->uuid);
+        } catch (\PDOException $e) {
+            dd("Error creating user: " . $e->getMessage());
+            return null;
+        }
     }
 
 
@@ -39,7 +61,31 @@ class UserRepository extends Singleton implements IUserRepository
 
     public function authenticate(string $email, string $password)
     {
-        // Implementação para autenticar um usuário
+        if (empty($email) || empty($password)) {
+            return null;
+        }
+
+        $query = "SELECT * FROM {$this->model->getTable()} WHERE email = :email";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        $result = $stmt->fetch();
+
+        if ($result && password_verify($password, $result['senha'])) {
+            return $this->model->fill($result);
+        }
+
         return null;
+    }
+
+    public function existsByField(string $field, $value): bool
+    {
+        $query = "SELECT COUNT(*) as count FROM {$this->model->getTable()} WHERE $field = :value";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':value', $value);
+        $stmt->execute();
+        $result = $stmt->fetch();
+
+        return $result['count'] > 0;
     }
 }

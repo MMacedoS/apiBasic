@@ -2,6 +2,8 @@
 
 namespace App\Utils;
 
+use App\Repositories\Entities\Users\UserRepository;
+
 trait Validators
 {
     protected array $data = [];
@@ -22,7 +24,7 @@ trait Validators
             }
         }
 
-        return empty($this->errors);
+        return empty($this->errors) ? $data : null;
     }
 
     protected function applyRule($field, $rule)
@@ -44,14 +46,14 @@ trait Validators
 
     protected function min($field, $min)
     {
-        if (strlen($this->data[$field]) < $min) {
+        if (!isset($this->data[$field]) || strlen((string)$this->data[$field]) < $min) {
             $this->errors[$field][] = "O campo $field deve ter no mínimo $min caracteres.";
         }
     }
 
     protected function max($field, $max)
     {
-        if (strlen($this->data[$field]) > $max) {
+        if (isset($this->data[$field]) && strlen((string)$this->data[$field]) > $max) {
             $this->errors[$field][] = "Este campo deve ter no máximo $max caracteres.";
         }
     }
@@ -80,6 +82,153 @@ trait Validators
             $this->errors[$field][] = "O campo $field deve ser um número inteiro.";
             return;
         }
+    }
+
+    protected function unique($field, $tableField)
+    {
+        if (!isset($this->data[$field])) {
+            $this->errors[$field][] = "O campo $field não pode estar vazio.";
+            return;
+        }
+
+        [$table, $column] = explode(',', $tableField);
+        $repository = $this->prepareRepository($table);
+        if ($repository === null) {
+            $this->errors[$field][] = "Repositório para a tabela $table não encontrado.";
+            return;
+        }
+        $exists = $repository->existsByField($column, $this->data[$field]);
+        if ($exists) {
+            $this->errors[$field][] = "O valor do campo $field já está em uso.";
+            return;
+        }
+    }
+
+    private function string($field)
+    {
+        if (!isset($this->data[$field]) || !is_string($this->data[$field])) {
+            $this->errors[$field][] = "O campo $field deve ser uma string.";
+            return;
+        }
+    }
+
+    private function boolean($field)
+    {
+        if (!isset($this->data[$field]) || !is_bool($this->data[$field])) {
+            $this->errors[$field][] = "O campo $field deve ser um valor booleano.";
+            return;
+        }
+    }
+
+    private function date($field)
+    {
+        if (!isset($this->data[$field]) || strtotime($this->data[$field]) === false) {
+            $this->errors[$field][] = "O campo $field deve ser uma data válida.";
+            return;
+        }
+    }
+
+    private function array($field)
+    {
+        if (!isset($this->data[$field]) || !is_array($this->data[$field])) {
+            $this->errors[$field][] = "O campo $field deve ser um array.";
+            return;
+        }
+    }
+
+    private function json($field)
+    {
+        if (!isset($this->data[$field])) {
+            $this->errors[$field][] = "O campo $field não pode estar vazio.";
+            return;
+        }
+        json_decode($this->data[$field]);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->errors[$field][] = "O campo $field deve ser um JSON válido.";
+            return;
+        }
+    }
+
+    private function url($field)
+    {
+        if (!isset($this->data[$field]) || !filter_var($this->data[$field], FILTER_VALIDATE_URL)) {
+            $this->errors[$field][] = "O campo $field deve ser uma URL válida.";
+            return;
+        }
+    }
+
+    private function ip($field)
+    {
+        if (!isset($this->data[$field]) || !filter_var($this->data[$field], FILTER_VALIDATE_IP)) {
+            $this->errors[$field][] = "O campo $field deve ser um endereço IP válido.";
+            return;
+        }
+    }
+
+    private function slug($field)
+    {
+        if (!isset($this->data[$field]) || !preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $this->data[$field])) {
+            $this->errors[$field][] = "O campo $field deve ser um slug válido.";
+            return;
+        }
+    }
+
+    private function alpha($field)
+    {
+        if (!isset($this->data[$field]) || !preg_match('/^[a-zA-Z]+$/', $this->data[$field])) {
+            $this->errors[$field][] = "O campo $field deve conter apenas letras.";
+            return;
+        }
+    }
+
+    private function alpha_num($field)
+    {
+        if (!isset($this->data[$field]) || !preg_match('/^[a-zA-Z0-9]+$/', $this->data[$field])) {
+            $this->errors[$field][] = "O campo $field deve conter apenas letras e números.";
+            return;
+        }
+    }
+
+    private function date_format($field, $format)
+    {
+        if (!isset($this->data[$field])) {
+            $this->errors[$field][] = "O campo $field não pode estar vazio.";
+            return;
+        }
+        $date = \DateTime::createFromFormat($format, $this->data[$field]);
+        if (!$date || $date->format($format) !== $this->data[$field]) {
+            $this->errors[$field][] = "O campo $field deve estar no formato $format.";
+            return;
+        }
+    }
+
+    private function exists($field, $tableField)
+    {
+        if (!isset($this->data[$field])) {
+            $this->errors[$field][] = "O campo $field não pode estar vazio.";
+            return;
+        }
+
+        [$table, $column] = explode(',', $tableField);
+        $repository = $this->prepareRepository($table);
+        if ($repository === null) {
+            $this->errors[$field][] = "Repositório para a tabela $table não encontrado.";
+            return;
+        }
+        $exists = $repository->existsByField($column, $this->data[$field]);
+        if (!$exists) {
+            $this->errors[$field][] = "O valor do campo $field não existe na tabela $table.";
+            return;
+        }
+    }
+
+    private function prepareRepository($table)
+    {
+        if ($table === 'users') {
+            return UserRepository::getInstance();
+        }
+
+        return null;
     }
 
     public function getErrors()

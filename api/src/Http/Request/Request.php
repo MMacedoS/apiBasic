@@ -28,4 +28,13 @@ class Request extends Singleton
 
         return is_array($data) ? $data : [];
     }
+
+    public function header(string $key): ?string
+    {
+        $headers = getallheaders();
+        $tokenHeader = $headers[$key];
+        $token = str_replace('Bearer ', '', $tokenHeader);
+
+        return $token ?? null;
+    }
 }

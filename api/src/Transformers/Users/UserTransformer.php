@@ -26,4 +26,27 @@ class UserTransformer
             return self::transform($user);
         }, $users);
     }
+
+    public static function keysTransform(array $data): array
+    {
+        $transformed = [];
+
+        if (isset($data['name'])) {
+            $transformed['nome'] = $data['name'];
+        }
+        if (isset($data['email'])) {
+            $transformed['email'] = $data['email'];
+        }
+        if (isset($data['password'])) {
+            $transformed['senha'] = $data['password'];
+        }
+        if (isset($data['access'])) {
+            $transformed['acesso'] = $data['access'];
+        }
+        if (isset($data['status'])) {
+            $transformed['situacao'] = $data['status'];
+        }
+
+        return $transformed;
+    }
 }

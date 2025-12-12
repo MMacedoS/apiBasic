@@ -9,6 +9,6 @@ class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        return $this->respondJson($request::all());
+        return ['message' => 'Welcome to the Home Page'];
     }
 }

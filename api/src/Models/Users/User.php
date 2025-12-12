@@ -2,8 +2,12 @@
 
 namespace App\Models\Users;
 
+use App\Models\Trait\UuidTrait;
+
 class User
 {
+    use UuidTrait;
+
     public int $id;
     public string $uuid;
     public string $nome;
@@ -22,7 +26,7 @@ class User
     public function fill(array $data): User
     {
         $this->id = $data['id'] ?? 0;
-        $this->uuid = $data['uuid'] ?? '';
+        $this->uuid = $data['uuid'] ?? $this->generateUuid();
         $this->nome = $data['nome'] ?? '';
         $this->email = $data['email'] ?? '';
         $this->senha = $data['senha'] ?? '';

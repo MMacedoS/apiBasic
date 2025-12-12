@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\v1\Users;
 
 use App\Http\Controllers\Controller;
+use App\Http\JWT\JWT;
 use App\Http\Request\Request;
 use App\Repositories\Contracts\Users\IUserRepository;
 use App\Transformers\Users\UserTransformer;
@@ -35,9 +36,34 @@ class UserController extends Controller
     {
         $data = $request->all();
 
+        $validatedData = $this->validate($data, [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6'
+        ]);
+
+        if (is_null($validatedData)) {
+            return $this->respondJson([
+                'message' => 'Dados inválidos',
+                'errors' => $this->getErrors()
+            ], 422);
+        }
+
+        $userTransformed = $this->userTransformer->keysTransform($validatedData);
+
+        $user = $this->userRepository->create($userTransformed);
+
+        if (is_null($user)) {
+            return $this->respondJson([
+                'message' => 'Erro ao criar usuário'
+            ], 500);
+        }
+
+        $user = $this->userTransformer->transform($user);
+
         return $this->respondJson([
             'message' => 'Usuário criado com sucesso',
-            'data' => $data
+            'data' => $user
         ], 201);
     }
 
@@ -64,6 +90,60 @@ class UserController extends Controller
         return $this->respondJson([
             'message' => 'Usuário removido com sucesso',
             'data' => ['id' => $id]
+        ]);
+    }
+
+    public function authenticate(Request $request)
+    {
+        $data = $request->all();
+
+        $validatedData = $this->validate($data, [
+            'email' => 'required|email',
+            'password' => 'required|string|min:6'
+        ]);
+
+        if (is_null($validatedData)) {
+            return $this->respondJson([
+                'message' => 'Dados inválidos',
+                'errors' => $this->getErrors()
+            ], 422);
+        }
+
+        $user = $this->userRepository->authenticate(
+            $validatedData['email'],
+            $validatedData['password']
+        );
+
+        if (is_null($user)) {
+            return $this->respondJson([
+                'message' => 'Credenciais inválidas'
+            ], 401);
+        }
+
+        $user = $this->userTransformer->transform($user);
+
+        $token = JWT::generateToken((array)$user, 3600);
+
+        return $this->respondJson([
+            'message' => 'Autenticação bem-sucedida',
+            'data' => $token
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        $token = $request->header('Authorization');
+
+        if (is_null($token)) {
+            return $this->respondJson([
+                'message' => 'Token não fornecido'
+            ], 400);
+        }
+
+        $token = JWT::invalidateToken($token);
+
+        return $this->respondJson([
+            'message' => 'Logout realizado com sucesso',
         ]);
     }
 }
