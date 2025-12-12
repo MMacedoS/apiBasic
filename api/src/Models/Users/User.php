@@ -15,6 +15,7 @@ class User
     public string $senha;
     public string $acesso;
     public string $situacao;
+    public ?string $email_verified_at;
     public string $created_at;
     public string $updated_at;
 
@@ -33,6 +34,7 @@ class User
         $user->senha = $data['senha'] ?? '';
         $user->acesso = $data['acesso'] ?? '';
         $user->situacao = $data['situacao'] ?? '';
+        $user->email_verified_at = $data['email_verified_at'] ?? null;
         $user->created_at = $data['created_at'] ?? '';
         $user->updated_at = $data['updated_at'] ?? '';
 

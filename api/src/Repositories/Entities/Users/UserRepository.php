@@ -80,6 +80,11 @@ class UserRepository extends Singleton implements IUserRepository
                 $params[':status'] = $user->situacao;
             }
 
+            if (!is_null($user->email_verified_at)) {
+                $fieldsToUpdate[] = 'email_verified_at = :email_verified_at';
+                $params[':email_verified_at'] = $user->email_verified_at;
+            }
+
             if (empty($fieldsToUpdate)) {
                 return $this->findById($id);
             }

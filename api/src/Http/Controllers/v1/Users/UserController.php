@@ -5,11 +5,13 @@ namespace App\Http\Controllers\v1\Users;
 use App\Http\Controllers\Controller;
 use App\Http\JWT\JWT;
 use App\Http\Request\Request;
+use App\Http\Trait\SendEmailTrait;
 use App\Repositories\Contracts\Users\IUserRepository;
 use App\Transformers\Users\UserTransformer;
 
 class UserController extends Controller
 {
+    use SendEmailTrait;
     private IUserRepository $userRepository;
     private UserTransformer $userTransformer;
 
@@ -58,6 +60,14 @@ class UserController extends Controller
                 'message' => 'Erro ao criar usuário'
             ], 500);
         }
+
+        $this->sendEmail(
+            $user->email,
+            'Bem-vindo ao Nosso App!',
+            'Obrigado por se registrar em nosso aplicativo.',
+            $user->nome,
+            $_ENV['URL_BASE'] . $_ENV['API_PREFIX'] . '/confirm-email/' . $user->uuid
+        );
 
         $user = $this->userTransformer->transform($user);
 
@@ -273,6 +283,29 @@ class UserController extends Controller
         return $this->respondJson([
             'message' => 'Usuário atualizado com sucesso',
             'data' =>  $updatedUser
+        ]);
+    }
+
+    public function confirmEmail(Request $request, $token)
+    {
+        $confirmed = $this->userRepository->findByUuid($token);
+
+        if (is_null($confirmed)) {
+            return $this->respondJson([
+                'message' => 'Token inválido ou expirado'
+            ], 400);
+        }
+
+        if ($confirmed->email_verified_at == '1') {
+            return $this->respondJson([
+                'message' => 'Email já confirmado'
+            ], 400);
+        }
+
+        $update = $this->userRepository->update($confirmed->id, ['email_verified_at' => 1]);
+
+        return $this->respondJson([
+            'message' => 'Email confirmado com sucesso'
         ]);
     }
 }
