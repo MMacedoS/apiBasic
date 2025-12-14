@@ -139,17 +139,6 @@ class UserRepository extends Singleton implements IUserRepository
         return null;
     }
 
-    public function existsByField(string $field, $value): bool
-    {
-        $query = "SELECT COUNT(*) as count FROM {$this->model->getTable()} WHERE $field = :value";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':value', $value);
-        $stmt->execute();
-        $result = $stmt->fetch();
-
-        return $result['count'] > 0;
-    }
-
     public function findByEmail(string $email)
     {
         $query = "SELECT * FROM {$this->model->getTable()} WHERE email = :email";

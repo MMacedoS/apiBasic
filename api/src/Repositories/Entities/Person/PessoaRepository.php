@@ -5,7 +5,6 @@ namespace App\Repositories\Entities\Person;
 use App\Config\Database;
 use App\Config\Singleton;
 use App\Models\Person\Pessoa;
-use App\Models\Users\User;
 use App\Repositories\Contracts\Person\IPessoaRepository;
 use App\Repositories\Entities\Users\UserRepository;
 use App\Repositories\Traits\FindTrait;
@@ -61,6 +60,13 @@ class PessoaRepository extends Singleton implements IPessoaRepository
     {
         if (empty($data)) {
             return null;
+        }
+
+        if (isset($data['email'])) {
+            $pessoaExists = $this->findByEmail($data['email']);
+            if (!is_null($pessoaExists)) {
+                return $pessoaExists;
+            }
         }
 
         try {
@@ -243,17 +249,6 @@ class PessoaRepository extends Singleton implements IPessoaRepository
         } catch (\Throwable $th) {
             return null;
         }
-    }
-
-    public function existsByField(string $field, $value): bool
-    {
-        $query = "SELECT COUNT(*) as count FROM {$this->model->getTable()} WHERE $field = :value";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':value', $value);
-        $stmt->execute();
-        $result = $stmt->fetch();
-
-        return $result['count'] > 0;
     }
 
     public function delete(int $id): bool

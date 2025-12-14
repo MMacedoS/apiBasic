@@ -119,7 +119,7 @@ class PessoaController extends Controller
 
         $validatedData = $this->validate($data, [
             'name' => 'nullable|string|max:255',
-            'email' => "nullable|email|max:255|unique:pessoa,email,{$pessoa->id}",
+            'email' => "nullable|email|max:255|unique:persons,email,{$pessoa->id}",
             'phone' => 'nullable|string|max:20',
             'type_doc' => 'nullable|string|max:50',
             'doc' => 'nullable|string|max:50',

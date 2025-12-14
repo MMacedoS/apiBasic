@@ -1,0 +1,132 @@
+<?php
+
+namespace App\Repositories\Entities\Employees;
+
+use App\Config\Database;
+use App\Config\Singleton;
+use App\Models\Employe\Funcionario;
+use App\Repositories\Contracts\Employees\IFuncionarioRepository;
+use App\Repositories\Entities\Person\PessoaRepository;
+use App\Repositories\Traits\FindTrait;
+
+class FuncionarioRepository extends Singleton implements IFuncionarioRepository
+{
+    use FindTrait;
+    private PessoaRepository $pessoaRepository;
+
+    public function __construct()
+    {
+        $this->model = new Funcionario();
+        $this->conn = Database::getInstance()->getConnection();
+        $this->pessoaRepository = PessoaRepository::getInstance();
+    }
+
+    public function create(array $data)
+    {
+        if (empty($data)) {
+            return null;
+        }
+
+        try {
+            if (isset($data['email'])) {
+                $pessoaExists = $this->pessoaRepository->create($data);
+                if (is_null($pessoaExists)) {
+                    return null;
+                }
+                $data['person_id'] = $pessoaExists->id;
+            }
+
+            $funcionario = $this->model->fill($data);
+
+            $query = "INSERT INTO 
+                {$this->model->getTable()} 
+                    (uuid, person_id, cargo, salario, departamento, data_admissao, data_demissao, situacao) 
+                VALUES 
+                    (:uuid, :person_id, :cargo, :salario, :departamento, :data_admissao, :data_demissao, :situacao)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':uuid', $funcionario->uuid);
+            $stmt->bindParam(':person_id', $funcionario->person_id);
+            $stmt->bindParam(':cargo', $funcionario->cargo);
+            $stmt->bindParam(':salario', $funcionario->salario);
+            $stmt->bindParam(':departamento', $funcionario->departamento);
+            $stmt->bindParam(':data_admissao', $funcionario->data_admissao);
+            $stmt->bindParam(':data_demissao', $funcionario->data_demissao);
+            $stmt->bindParam(':situacao', $funcionario->situacao);
+            $stmt->execute();
+
+            return $this->findByUuid($funcionario->uuid);
+        } catch (\PDOException $e) {
+            return null;
+        }
+    }
+
+    public function update(int $id, array $data)
+    {
+        if (empty($data) || is_null($id) || $id <= 0) {
+            return null;
+        }
+
+        try {
+            $funcionario = $this->findById($id);
+            if (is_null($funcionario)) {
+                return null;
+            }
+
+            foreach ($data as $key => $value) {
+                if (property_exists($funcionario, $key)) {
+                    $funcionario->$key = $value;
+                }
+            }
+
+            $query = "UPDATE {$this->model->getTable()} SET 
+                cargo = :cargo, 
+                salario = :salario, 
+                departamento = :departamento, 
+                data_admissao = :data_admissao, 
+                data_demissao = :data_demissao, 
+                situacao = :situacao 
+                WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':cargo', $funcionario->cargo);
+            $stmt->bindParam(':salario', $funcionario->salario);
+            $stmt->bindParam(':departamento', $funcionario->departamento);
+            $stmt->bindParam(':data_admissao', $funcionario->data_admissao);
+            $stmt->bindParam(':data_demissao', $funcionario->data_demissao);
+            $stmt->bindParam(':situacao', $funcionario->situacao);
+            $stmt->bindParam(':id', $id);
+            $stmt->execute();
+
+            return $this->findById($id);
+        } catch (\PDOException $e) {
+            return null;
+        }
+    }
+
+    public function delete(int $id)
+    {
+        $funcionario = $this->findById($id);
+        if (is_null($funcionario)) {
+            return false;
+        }
+
+        try {
+            $query = "DELETE FROM {$this->model->getTable()} WHERE id = :id";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id);
+
+            $register = $stmt->execute();
+            if ($register) {
+                if ($funcionario->person_id) {
+                    $personRepo = PessoaRepository::getInstance();
+                    $personDeleted = $personRepo->delete($funcionario->person_id);
+                    if (!$personDeleted) {
+                        return false;
+                    }
+                }
+            }
+            return $register;
+        } catch (\PDOException $e) {
+            return false;
+        }
+    }
+}

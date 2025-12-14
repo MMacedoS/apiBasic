@@ -164,6 +164,27 @@ trait Validators
         }
     }
 
+    public function after_or_equal($field, $otherField)
+    {
+        if (!isset($this->data[$field])) {
+            return;
+        }
+
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
+        if (!isset($this->data[$field]) || !isset($this->data[$otherField])) {
+            $this->errors[$field][] = "O campo $field ou $otherField não pode estar vazio.";
+            return;
+        }
+
+        if (strtotime($this->data[$field]) < strtotime($this->data[$otherField])) {
+            $this->errors[$field][] = "O campo $field deve ser uma data igual ou posterior a $otherField.";
+            return;
+        }
+    }
+
     private function float($field)
     {
         if ($this->opcional && !isset($this->data[$field])) {
@@ -207,6 +228,10 @@ trait Validators
 
     private function date($field)
     {
+        if (!isset($this->data[$field])) {
+            return;
+        }
+
         if ($this->opcional && !isset($this->data[$field])) {
             return;
         }
@@ -388,7 +413,7 @@ trait Validators
             return UserRepository::getInstance();
         }
 
-        if ($table === 'pessoa') {
+        if ($table === 'persons') {
             return PessoaRepository::getInstance();
         }
 
