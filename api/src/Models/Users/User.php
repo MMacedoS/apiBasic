@@ -2,11 +2,14 @@
 
 namespace App\Models\Users;
 
+use App\Models\Trait\ModelTrait;
 use App\Models\Trait\UuidTrait;
 
 class User
 {
-    use UuidTrait;
+    use UuidTrait, ModelTrait;
+
+    private const TABLE = 'users';
 
     public int $id;
     public string $uuid;
@@ -18,11 +21,6 @@ class User
     public ?string $email_verified_at;
     public string $created_at;
     public string $updated_at;
-
-    public function getTable(): string
-    {
-        return 'users';
-    }
 
     public function fill(array $data): User
     {

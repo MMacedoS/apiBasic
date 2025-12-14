@@ -24,6 +24,11 @@ class UserRepository extends Singleton implements IUserRepository
             return null;
         }
 
+        $userExists = $this->findByEmail($data['email'] ?? '');
+        if (!is_null($userExists)) {
+            return $userExists;
+        }
+
         try {
             $user = $this->model->fill($data);
             $hashedPassword = password_hash($user->senha, PASSWORD_BCRYPT);
@@ -143,5 +148,20 @@ class UserRepository extends Singleton implements IUserRepository
         $result = $stmt->fetch();
 
         return $result['count'] > 0;
+    }
+
+    public function findByEmail(string $email)
+    {
+        $query = "SELECT * FROM {$this->model->getTable()} WHERE email = :email";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        $result = $stmt->fetch();
+
+        if ($result) {
+            return $this->model->fill($result);
+        }
+
+        return null;
     }
 }

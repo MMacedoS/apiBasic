@@ -2,6 +2,7 @@
 
 namespace App\Utils;
 
+use App\Repositories\Entities\Person\PessoaRepository;
 use App\Repositories\Entities\Users\UserRepository;
 
 trait Validators
@@ -216,6 +217,39 @@ trait Validators
         }
     }
 
+    private function in($field, $values)
+    {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
+        $allowedValues = explode(',', $values);
+        if (!isset($this->data[$field]) || !in_array($this->data[$field], $allowedValues)) {
+            $this->errors[$field][] = "O campo $field deve ser um dos seguintes valores: " . implode(', ', $allowedValues) . ".";
+            return;
+        }
+    }
+
+    private function not_in($field, $values)
+    {
+        if ($this->opcional && !isset($this->data[$field])) {
+            return;
+        }
+
+        $disallowedValues = explode(',', $values);
+        if (!isset($this->data[$field]) || in_array($this->data[$field], $disallowedValues)) {
+            $this->errors[$field][] = "O campo $field não pode ser um dos seguintes valores: " . implode(', ', $disallowedValues) . ".";
+            return;
+        }
+    }
+
+    private function nullable($field)
+    {
+        if (!isset($this->data[$field]) || is_null($this->data[$field])) {
+            return;
+        }
+    }
+
     private function array($field)
     {
         if ($this->opcional && !isset($this->data[$field])) {
@@ -352,6 +386,10 @@ trait Validators
     {
         if ($table === 'users') {
             return UserRepository::getInstance();
+        }
+
+        if ($table === 'pessoa') {
+            return PessoaRepository::getInstance();
         }
 
         return null;

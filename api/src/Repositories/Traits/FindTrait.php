@@ -84,4 +84,18 @@ trait FindTrait
         }
         return $entities;
     }
+
+    public function findByAttribute(string $attribute, $value)
+    {
+        $stmt = $this->conn->prepare("SELECT * FROM {$this->model->getTable()} WHERE {$attribute} = :value");
+        $stmt->bindParam(':value', $value);
+        $stmt->execute();
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $entities = [];
+        foreach ($results as $row) {
+            $entities[] = $this->model->fill($row);
+        }
+        return $entities;
+    }
 }

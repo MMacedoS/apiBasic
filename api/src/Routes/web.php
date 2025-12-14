@@ -10,3 +10,5 @@ Route::get('/health', function () {
 });
 
 require_once __DIR__ . '/Users/userRoutes.php';
+require_once __DIR__ . '/Services/serviceRoute.php';
+require_once __DIR__ . '/Person/personRoute.php';
