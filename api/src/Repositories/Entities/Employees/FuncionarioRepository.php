@@ -36,6 +36,12 @@ class FuncionarioRepository extends Singleton implements IFuncionarioRepository
                 $data['person_id'] = $pessoaExists->id;
             }
 
+            $exists = $this->findByAttribute('person_id', $data['person_id'] ?? 0);
+
+            if (!empty($exists)) {
+                return $exists[0];
+            }
+
             $funcionario = $this->model->fill($data);
 
             $query = "INSERT INTO 

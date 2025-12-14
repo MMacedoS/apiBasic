@@ -7,7 +7,6 @@ use App\Config\Singleton;
 use App\Models\Customer\Cliente;
 use App\Repositories\Contracts\Customers\IClienteRepository;
 use App\Repositories\Entities\Person\PessoaRepository;
-use App\Repositories\Entities\Users\UserRepository;
 use App\Repositories\Traits\FindTrait;
 
 class ClienteRepository extends Singleton implements IClienteRepository
@@ -37,6 +36,12 @@ class ClienteRepository extends Singleton implements IClienteRepository
                 $data['person_id'] = $pessoaExists->id;
             }
 
+            $exists = $this->findByAttribute('person_id', $data['person_id'] ?? 0);
+
+            if (!empty($exists)) {
+                return $exists[0];
+            }
+
             $cliente = $this->model->fill($data);
             $query = "INSERT INTO 
                 {$this->model->getTable()} 
@@ -46,13 +51,12 @@ class ClienteRepository extends Singleton implements IClienteRepository
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(':uuid', $cliente->uuid);
             $stmt->bindParam(':person_id', $cliente->person_id);
-            $stmt->bindParam(':email', $cliente->email);
-            $stmt->bindParam(':telefone', $cliente->telefone);
-            $stmt->bindParam(':endereco', $cliente->endereco);
+            $stmt->bindParam(':situacao', $cliente->situacao);
             $stmt->execute();
 
             return $this->findByUuid($cliente->uuid);
         } catch (\PDOException $e) {
+            dd("Error creating customer: " . $e->getMessage());
             return null;
         }
     }
@@ -108,9 +112,9 @@ class ClienteRepository extends Singleton implements IClienteRepository
             $register = $stmt->execute();
 
             if ($register) {
-                if ($customer->user_id) {
-                    $userRepo = UserRepository::getInstance();
-                    $userRepo->delete($customer->user_id);
+                if ($customer->person_id) {
+                    $userRepo = PessoaRepository::getInstance();
+                    $userRepo->delete($customer->person_id);
                     if (!$userRepo) {
                         return false;
                     }
