@@ -14,7 +14,7 @@ class FuncionarioTransformer
         return [
             'id' => $data->uuid ?? null,
             'code' => $data->id ?? null,
-            'person' => self::preparePerson($data->person_id),
+            'person' => (object)self::preparePerson($data->person_id),
             'job' => $data->cargo,
             'amount' => $data->salario,
             'departure' => $data->departamento,

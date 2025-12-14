@@ -4,11 +4,14 @@ namespace App\Http\Controllers\v1\Employees;
 
 use App\Http\Controllers\Controller;
 use App\Http\Request\Request;
+use App\Http\Trait\SendEmailTrait;
 use App\Repositories\Entities\Employees\FuncionarioRepository;
 use App\Transformers\Employees\FuncionarioTransformer;
 
 class FuncionarioController extends Controller
 {
+    use SendEmailTrait;
+
     protected FuncionarioRepository $funcionarioRepository;
     protected FuncionarioTransformer $funcionarioTransformer;
 
@@ -93,7 +96,17 @@ class FuncionarioController extends Controller
             ], 500);
         }
 
-        $transformedFuncionario = $this->funcionarioTransformer::transform($funcionario);
+        $transformedFuncionario = (object)$this->funcionarioTransformer::transform($funcionario);
+
+        $username = (object)$transformedFuncionario->person->username;
+
+        $this->sendEmail(
+            $username->email,
+            'Bem-vindo ao Nosso App!',
+            'Obrigado por se registrar em nosso aplicativo.',
+            $username->name,
+            $_ENV['URL_BASE'] . $_ENV['API_PREFIX'] . '/confirm-email/' . $username->id
+        );
 
         return $this->respondJson([
             'message' => 'Funcionário criado com sucesso',
@@ -151,7 +164,18 @@ class FuncionarioController extends Controller
             ], 500);
         }
 
-        $transformedFuncionario = $this->funcionarioTransformer::transform($updatedFuncionario);
+        $transformedFuncionario = (object)$this->funcionarioTransformer::transform($updatedFuncionario);
+
+        if (isset($validatedData['email']) && $validatedData['email'] !== $transformedFuncionario->person->email) {
+            $username = (object)$transformedFuncionario->person->username;
+            $this->sendEmail(
+                $validatedData['email'],
+                'Atualização de Email',
+                'Seu email foi atualizado com sucesso.',
+                $username->name,
+                $_ENV['URL_BASE'] . $_ENV['API_PREFIX'] . '/confirm-email/' . $username->id
+            );
+        }
 
         return $this->respondJson([
             'message' => 'Funcionário atualizado com sucesso',
