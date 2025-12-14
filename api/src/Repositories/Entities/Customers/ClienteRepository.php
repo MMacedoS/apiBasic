@@ -8,10 +8,11 @@ use App\Models\Customer\Cliente;
 use App\Repositories\Contracts\Customers\IClienteRepository;
 use App\Repositories\Entities\Person\PessoaRepository;
 use App\Repositories\Traits\FindTrait;
+use App\Repositories\Traits\StandartTrait;
 
 class ClienteRepository extends Singleton implements IClienteRepository
 {
-    use FindTrait;
+    use FindTrait, StandartTrait;
     private PessoaRepository $pessoaRepository;
 
     public function __construct()
@@ -43,20 +44,14 @@ class ClienteRepository extends Singleton implements IClienteRepository
             }
 
             $cliente = $this->model->fill($data);
-            $query = "INSERT INTO 
-                {$this->model->getTable()} 
-                    (uuid, person_id, situacao) 
-                VALUES 
-                    (:uuid, :person_id, :situacao)";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':uuid', $cliente->uuid);
-            $stmt->bindParam(':person_id', $cliente->person_id);
-            $stmt->bindParam(':situacao', $cliente->situacao);
-            $stmt->execute();
+            $create = $this->toCreate($cliente);
+
+            if (!$create) {
+                return null;
+            }
 
             return $this->findByUuid($cliente->uuid);
         } catch (\PDOException $e) {
-            dd("Error creating customer: " . $e->getMessage());
             return null;
         }
     }
@@ -68,25 +63,18 @@ class ClienteRepository extends Singleton implements IClienteRepository
         }
 
         try {
-            $cliente = $this->findById($id);
-            if (is_null($cliente)) {
+            $clienteCurrent = $this->findById($id);
+            if (is_null($clienteCurrent)) {
                 return null;
             }
 
-            $fields = [];
-            $params = [];
-            foreach ($data as $key => $value) {
-                $fields[] = "{$key} = :{$key}";
-                $params[":{$key}"] = $value;
+            $saved = $this->save($data, $clienteCurrent);
+
+            if (!$saved) {
+                return null;
             }
-            $fieldsStr = implode(', ', $fields);
-            $query = "UPDATE {$this->model->getTable()} SET {$fieldsStr} WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            foreach ($params as $param => $value) {
-                $stmt->bindValue($param, $value);
-            }
-            $stmt->bindValue(':id', $id);
-            $stmt->execute();
+
+            $this->pessoaRepository->update($clienteCurrent->person_id, $data);
 
             return $this->findById($id);
         } catch (\PDOException $e) {

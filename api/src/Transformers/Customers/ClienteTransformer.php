@@ -13,7 +13,7 @@ class ClienteTransformer
         return [
             'id' => $customer->uuid,
             'code' => $customer->id,
-            'person' => self::preparePerson($customer->person_id),
+            'person' => (object)self::preparePerson($customer->person_id),
             'status' => $customer->situacao,
             'created_at' => $customer->created_at,
             'updated_at' => $customer->updated_at,

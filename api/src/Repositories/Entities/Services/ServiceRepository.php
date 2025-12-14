@@ -7,10 +7,11 @@ use App\Config\Singleton;
 use App\Models\Services\Service;
 use App\Repositories\Contracts\Services\IServiceRepository;
 use App\Repositories\Traits\FindTrait;
+use App\Repositories\Traits\StandartTrait;
 
 class ServiceRepository extends Singleton implements IServiceRepository
 {
-    use FindTrait;
+    use FindTrait, StandartTrait;
 
     public function __construct()
     {
@@ -62,20 +63,12 @@ class ServiceRepository extends Singleton implements IServiceRepository
 
         try {
             $service = $this->model->fill($data);
-            $stmt = $this->conn->prepare(
-                "INSERT INTO {$this->model->getTable()} 
-                (uuid, nome, descricao, valor, categoria, duracao, situacao) 
-                VALUES 
-                (:uuid, :nome, :descricao, :valor, :categoria, :duracao, :situacao)"
-            );
-            $stmt->bindParam(':uuid', $service->uuid);
-            $stmt->bindParam(':nome', $service->nome);
-            $stmt->bindParam(':descricao', $service->descricao);
-            $stmt->bindParam(':valor', $service->valor);
-            $stmt->bindParam(':categoria', $service->categoria);
-            $stmt->bindParam(':duracao', $service->duracao);
-            $stmt->bindParam(':situacao', $service->situacao);
-            $stmt->execute();
+
+            $create = $this->toCreate($service);
+
+            if (!$create) {
+                return null;
+            }
             return $this->findByUuid($service->uuid);
         } catch (\Throwable $th) {
             dd("Error creating service: " . $th->getMessage());
@@ -95,50 +88,11 @@ class ServiceRepository extends Singleton implements IServiceRepository
         }
 
         try {
-            $service = $this->model->fill($data);
-            $fieldsToUpdate = [];
-            $params = [];
+            $saved = $this->save($data, $serviceCurrent);
 
-            if (!empty($service->nome)) {
-                $fieldsToUpdate[] = 'nome = :nome';
-                $params[':nome'] = $service->nome;
+            if (!$saved) {
+                return null;
             }
-            if (!empty($service->descricao)) {
-                $fieldsToUpdate[] = 'descricao = :descricao';
-                $params[':descricao'] = $service->descricao;
-            }
-
-            if (!is_null($service->valor)) {
-                $fieldsToUpdate[] = 'valor = :valor';
-                $params[':valor'] = $service->valor;
-            }
-
-            if (!is_null($service->categoria)) {
-                $fieldsToUpdate[] = 'categoria = :categoria';
-                $params[':categoria'] = $service->categoria;
-            }
-
-            if (!is_null($service->duracao)) {
-                $fieldsToUpdate[] = 'duracao = :duracao';
-                $params[':duracao'] = $service->duracao;
-            }
-
-            if (!is_null($service->situacao)) {
-                $fieldsToUpdate[] = 'situacao = :situacao';
-                $params[':situacao'] = $service->situacao;
-            }
-
-            if (empty($fieldsToUpdate)) {
-                return $this->findById($id);
-            }
-
-            $query = "UPDATE {$this->model->getTable()} SET " . implode(', ', $fieldsToUpdate) . " WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            foreach ($params as $param => $value) {
-                $stmt->bindValue($param, $value);
-            }
-            $stmt->bindValue(':id', $id);
-            $stmt->execute();
             return $this->findById($id);
         } catch (\Throwable $th) {
             return null;

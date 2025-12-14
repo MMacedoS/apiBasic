@@ -8,10 +8,11 @@ use App\Models\Person\Pessoa;
 use App\Repositories\Contracts\Person\IPessoaRepository;
 use App\Repositories\Entities\Users\UserRepository;
 use App\Repositories\Traits\FindTrait;
+use App\Repositories\Traits\StandartTrait;
 
 class PessoaRepository extends Singleton implements IPessoaRepository
 {
-    use FindTrait;
+    use FindTrait, StandartTrait;
 
     private UserRepository $userRepository;
 
@@ -84,63 +85,11 @@ class PessoaRepository extends Singleton implements IPessoaRepository
 
             $pessoa->user_id = $user->id;
 
-            $stmt = $this->conn->prepare(
-                "INSERT INTO {$this->model->getTable()} 
-                (
-                    uuid, 
-                    user_id,
-                    nome, 
-                    email, 
-                    telefone, 
-                    tipo_doc, 
-                    doc, 
-                    data_nascimento, 
-                    genero, 
-                    foto, 
-                    endereco, 
-                    cidade, 
-                    uf, 
-                    cep, 
-                    pais, 
-                    situacao
-                ) 
-                VALUES 
-                (
-                    :uuid, 
-                    :user_id,
-                    :nome, 
-                    :email, 
-                    :telefone, 
-                    :tipo_doc, 
-                    :doc, 
-                    :data_nascimento, 
-                    :genero, 
-                    :foto, 
-                    :endereco, 
-                    :cidade, 
-                    :uf, 
-                    :cep, 
-                    :pais, 
-                    :situacao
-                )"
-            );
-            $stmt->bindParam(':uuid', $pessoa->uuid);
-            $stmt->bindParam(':user_id', $pessoa->user_id);
-            $stmt->bindParam(':nome', $pessoa->nome);
-            $stmt->bindParam(':email', $pessoa->email);
-            $stmt->bindParam(':telefone', $pessoa->telefone);
-            $stmt->bindParam(':tipo_doc', $pessoa->tipo_doc);
-            $stmt->bindParam(':doc', $pessoa->doc);
-            $stmt->bindParam(':data_nascimento', $pessoa->data_nascimento);
-            $stmt->bindParam(':genero', $pessoa->genero);
-            $stmt->bindParam(':foto', $pessoa->foto);
-            $stmt->bindParam(':endereco', $pessoa->endereco);
-            $stmt->bindParam(':cidade', $pessoa->cidade);
-            $stmt->bindParam(':uf', $pessoa->uf);
-            $stmt->bindParam(':cep', $pessoa->cep);
-            $stmt->bindParam(':pais', $pessoa->pais);
-            $stmt->bindParam(':situacao', $pessoa->situacao);
-            $stmt->execute();
+            $create = $this->toCreate($pessoa);
+
+            if (!$create) {
+                return null;
+            }
             return $this->findByUuid($pessoa->uuid);
         } catch (\Throwable $th) {
             return null;
@@ -159,92 +108,16 @@ class PessoaRepository extends Singleton implements IPessoaRepository
         }
 
         try {
-            $pessoa = $this->model->fill($data);
-            $fieldsToUpdate = [];
-            $params = [];
+            $saved = $this->save($data, $pessoaCurrent);
 
-            if (!empty($pessoa->nome)) {
-                $fieldsToUpdate[] = 'nome = :nome';
-                $params[':nome'] = $pessoa->nome;
+            if (!$saved) {
+                return null;
             }
 
-            if (!empty($pessoa->email)) {
-                $fieldsToUpdate[] = 'email = :email';
-                $params[':email'] = $pessoa->email;
+            if (!is_null($pessoaCurrent->user_id)) {
+                $this->userRepository->update($pessoaCurrent->user_id, $data);
             }
 
-            if (!is_null($pessoa->telefone)) {
-                $fieldsToUpdate[] = 'telefone = :telefone';
-                $params[':telefone'] = $pessoa->telefone;
-            }
-
-            if (!is_null($pessoa->tipo_doc)) {
-                $fieldsToUpdate[] = 'tipo_doc = :tipo_doc';
-                $params[':tipo_doc'] = $pessoa->tipo_doc;
-            }
-
-            if (!is_null($pessoa->doc)) {
-                $fieldsToUpdate[] = 'doc = :doc';
-                $params[':doc'] = $pessoa->doc;
-            }
-
-            if (!is_null($pessoa->data_nascimento)) {
-                $fieldsToUpdate[] = 'data_nascimento = :data_nascimento';
-                $params[':data_nascimento'] = $pessoa->data_nascimento;
-            }
-
-            if (!is_null($pessoa->genero)) {
-                $fieldsToUpdate[] = 'genero = :genero';
-                $params[':genero'] = $pessoa->genero;
-            }
-
-            if (!is_null($pessoa->foto)) {
-                $fieldsToUpdate[] = 'foto = :foto';
-                $params[':foto'] = $pessoa->foto;
-            }
-
-            if (!is_null($pessoa->endereco)) {
-                $fieldsToUpdate[] = 'endereco = :endereco';
-                $params[':endereco'] = $pessoa->endereco;
-            }
-
-            if (!is_null($pessoa->cidade)) {
-                $fieldsToUpdate[] = 'cidade = :cidade';
-                $params[':cidade'] = $pessoa->cidade;
-            }
-
-            if (!is_null($pessoa->uf)) {
-                $fieldsToUpdate[] = 'uf = :uf';
-                $params[':uf'] = $pessoa->uf;
-            }
-
-            if (!is_null($pessoa->cep)) {
-                $fieldsToUpdate[] = 'cep = :cep';
-                $params[':cep'] = $pessoa->cep;
-            }
-
-            if (!is_null($pessoa->pais)) {
-                $fieldsToUpdate[] = 'pais = :pais';
-                $params[':pais'] = $pessoa->pais;
-            }
-
-            if (!is_null($pessoa->situacao)) {
-                $fieldsToUpdate[] = 'situacao = :situacao';
-                $params[':situacao'] = $pessoa->situacao;
-            }
-
-            if (empty($fieldsToUpdate)) {
-                return $this->findById($id);
-            }
-
-            $setClause = implode(', ', $fieldsToUpdate);
-            $query = "UPDATE {$this->model->getTable()} SET {$setClause} WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            foreach ($params as $param => $value) {
-                $stmt->bindValue($param, $value);
-            }
-            $stmt->bindValue(':id', $id);
-            $stmt->execute();
             return $this->findById($id);
         } catch (\Throwable $th) {
             return null;

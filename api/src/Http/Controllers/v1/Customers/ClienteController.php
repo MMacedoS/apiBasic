@@ -4,11 +4,14 @@ namespace App\Http\Controllers\v1\Customers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Request\Request;
+use App\Http\Trait\SendEmailTrait;
 use App\Repositories\Contracts\Customers\IClienteRepository;
 use App\Transformers\Customers\ClienteTransformer;
 
 class ClienteController extends Controller
 {
+    use SendEmailTrait;
+
     protected IClienteRepository $clienteRepository;
     protected ClienteTransformer $clienteTransformer;
 
@@ -24,7 +27,7 @@ class ClienteController extends Controller
     {
         $params = $request->all();
         $clientes = $this->clienteRepository->findAll($params);
-        $transformedClientes = $this->clienteTransformer->transformCollection($clientes);
+        $transformedClientes = $this->clienteTransformer::transformCollection($clientes);
 
         return $this->respondJson([
             'message' => 'Lista de clientes',
@@ -42,7 +45,7 @@ class ClienteController extends Controller
             ], 404);
         }
 
-        $transformedCliente = $this->clienteTransformer->transform($cliente);
+        $transformedCliente = $this->clienteTransformer::transform($cliente);
 
         return $this->respondJson([
             'message' => 'Detalhes do cliente',
@@ -71,7 +74,7 @@ class ClienteController extends Controller
             'country' => 'nullable|string|max:100'
         ]);
 
-        $clienteData = ClienteTransformer::keysTransform($validatedData);
+        $clienteData = $this->clienteTransformer::keysTransform($validatedData);
         $newCliente = $this->clienteRepository->create($clienteData);
 
         if (is_null($newCliente)) {
@@ -80,7 +83,17 @@ class ClienteController extends Controller
             ], 500);
         }
 
-        $transformedCliente = $this->clienteTransformer->transform($newCliente);
+        $transformedCliente = (object)$this->clienteTransformer::transform($newCliente);
+
+        $username = $transformedCliente->person->username;
+
+        $this->sendEmail(
+            $username->email,
+            'Bem-vindo ao Nosso App!',
+            'Obrigado por se registrar em nosso aplicativo.',
+            $username->name,
+            $_ENV['URL_BASE'] . $_ENV['API_PREFIX'] . '/confirm-email/' . $username->id
+        );
 
         return $this->respondJson([
             'message' => 'Cliente criado com sucesso',
@@ -125,7 +138,19 @@ class ClienteController extends Controller
             ], 500);
         }
 
-        $transformedCliente = $this->clienteTransformer->transform($updatedCliente);
+        $transformedCliente = (object)$this->clienteTransformer->transform($updatedCliente);
+
+        $username = (object)$transformedCliente->person->username;
+
+        if (isset($validatedData['email']) && $validatedData['email'] !== $username->email) {
+            $this->sendEmail(
+                $username->email,
+                'Bem-vindo ao Nosso App!',
+                'Obrigado por se registrar em nosso aplicativo.',
+                $username->name,
+                $_ENV['URL_BASE'] . $_ENV['API_PREFIX'] . '/confirm-email/' . $username->id
+            );
+        }
 
         return $this->respondJson([
             'message' => 'Cliente atualizado com sucesso',

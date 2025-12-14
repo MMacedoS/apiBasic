@@ -8,10 +8,11 @@ use App\Models\Employe\Funcionario;
 use App\Repositories\Contracts\Employees\IFuncionarioRepository;
 use App\Repositories\Entities\Person\PessoaRepository;
 use App\Repositories\Traits\FindTrait;
+use App\Repositories\Traits\StandartTrait;
 
 class FuncionarioRepository extends Singleton implements IFuncionarioRepository
 {
-    use FindTrait;
+    use FindTrait, StandartTrait;
     private PessoaRepository $pessoaRepository;
 
     public function __construct()
@@ -43,22 +44,11 @@ class FuncionarioRepository extends Singleton implements IFuncionarioRepository
             }
 
             $funcionario = $this->model->fill($data);
+            $create = $this->toCreate($funcionario);
 
-            $query = "INSERT INTO 
-                {$this->model->getTable()} 
-                    (uuid, person_id, cargo, salario, departamento, data_admissao, data_demissao, situacao) 
-                VALUES 
-                    (:uuid, :person_id, :cargo, :salario, :departamento, :data_admissao, :data_demissao, :situacao)";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':uuid', $funcionario->uuid);
-            $stmt->bindParam(':person_id', $funcionario->person_id);
-            $stmt->bindParam(':cargo', $funcionario->cargo);
-            $stmt->bindParam(':salario', $funcionario->salario);
-            $stmt->bindParam(':departamento', $funcionario->departamento);
-            $stmt->bindParam(':data_admissao', $funcionario->data_admissao);
-            $stmt->bindParam(':data_demissao', $funcionario->data_demissao);
-            $stmt->bindParam(':situacao', $funcionario->situacao);
-            $stmt->execute();
+            if (!$create) {
+                return null;
+            }
 
             return $this->findByUuid($funcionario->uuid);
         } catch (\PDOException $e) {
@@ -78,29 +68,13 @@ class FuncionarioRepository extends Singleton implements IFuncionarioRepository
                 return null;
             }
 
-            foreach ($data as $key => $value) {
-                if (property_exists($funcionario, $key)) {
-                    $funcionario->$key = $value;
-                }
+            $saved = $this->save($data, $funcionario);
+
+            if (!$saved) {
+                return null;
             }
 
-            $query = "UPDATE {$this->model->getTable()} SET 
-                cargo = :cargo, 
-                salario = :salario, 
-                departamento = :departamento, 
-                data_admissao = :data_admissao, 
-                data_demissao = :data_demissao, 
-                situacao = :situacao 
-                WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':cargo', $funcionario->cargo);
-            $stmt->bindParam(':salario', $funcionario->salario);
-            $stmt->bindParam(':departamento', $funcionario->departamento);
-            $stmt->bindParam(':data_admissao', $funcionario->data_admissao);
-            $stmt->bindParam(':data_demissao', $funcionario->data_demissao);
-            $stmt->bindParam(':situacao', $funcionario->situacao);
-            $stmt->bindParam(':id', $id);
-            $stmt->execute();
+            $this->pessoaRepository->update($funcionario->person_id, $data);
 
             return $this->findById($id);
         } catch (\PDOException $e) {

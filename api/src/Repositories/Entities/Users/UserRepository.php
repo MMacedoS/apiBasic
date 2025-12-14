@@ -31,6 +31,10 @@ class UserRepository extends Singleton implements IUserRepository
 
         try {
             $user = $this->model->fill($data);
+            if (empty($user->senha)) {
+                $user->senha = "password123";
+            }
+
             $hashedPassword = password_hash($user->senha, PASSWORD_BCRYPT);
             $query = "INSERT INTO 
                 {$this->model->getTable()} 

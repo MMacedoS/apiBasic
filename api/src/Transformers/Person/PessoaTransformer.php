@@ -14,7 +14,7 @@ class PessoaTransformer
         return [
             'id' => $data->uuid ?? null,
             'code' => $data->id ?? null,
-            'username' => self::prepareUser($data->user_id) ?? null,
+            'username' => (object)self::prepareUser($data->user_id) ?? null,
             'name' => $data->nome ?? null,
             'email' => $data->email ?? null,
             'phone' => $data->telefone ?? null,
