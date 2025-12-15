@@ -6,7 +6,7 @@ use App\Http\Controllers\v1\Users\UserController;
 Route::post('/login', [UserController::class, 'authenticate']);
 Route::get('/confirm-email/{token}', [UserController::class, 'confirmEmail']);
 
-Route::group(['middleware' => ['auth']], function () {
+Route::group(['middleware' => ['auth', 'role' => 'admin']], function () {
     Route::post('/logout', [UserController::class, 'logout']);
 
     Route::get('/users', [UserController::class, 'index']);

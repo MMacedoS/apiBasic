@@ -3,7 +3,12 @@
 use App\Config\Route;
 use App\Http\Controllers\v1\Services\ServiceController;
 
-Route::group(['middleware' => ['auth']], function () {
+Route::group(['middleware' => ['auth', 'permission' => [
+    'create-service',
+    'update-service',
+    'delete-service',
+    'view-service'
+]]], function () {
     Route::get('/services', [ServiceController::class, 'index']);
     Route::get('/services/{id}', [ServiceController::class, 'show']);
     Route::post('/services', [ServiceController::class, 'store']);
