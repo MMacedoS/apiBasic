@@ -78,4 +78,12 @@ trait StandartTrait
             $stmt->bindValue($param, $value);
         }
     }
+
+    public function toDelete(int $id): bool
+    {
+        $query = "DELETE FROM {$this->model->getTable()} WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    }
 }

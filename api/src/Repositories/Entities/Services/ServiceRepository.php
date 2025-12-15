@@ -71,7 +71,6 @@ class ServiceRepository extends Singleton implements IServiceRepository
             }
             return $this->findByUuid($service->uuid);
         } catch (\Throwable $th) {
-            dd("Error creating service: " . $th->getMessage());
             return null;
         }
     }
@@ -105,12 +104,13 @@ class ServiceRepository extends Singleton implements IServiceRepository
             return false;
         }
 
+        $service = $this->findById($id);
+        if (is_null($service)) {
+            return false;
+        }
+
         try {
-            $stmt = $this->conn
-                ->prepare("DELETE FROM {$this->model->getTable()} WHERE id = :id");
-            $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->rowCount() > 0;
+            return $this->toDelete($service->id);
         } catch (\Throwable $th) {
             return false;
         }

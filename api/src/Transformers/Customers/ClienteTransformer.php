@@ -99,6 +99,12 @@ class ClienteTransformer
         if (isset($data['country'])) {
             $transformed['pais'] = $data['country'];
         }
+        if (isset($data['password'])) {
+            $transformed['senha'] = $data['password'];
+        }
+        if (isset($data['access'])) {
+            $transformed['acesso'] = $data['access'];
+        }
 
         return $transformed;
     }

@@ -7,10 +7,11 @@ use App\Config\Singleton;
 use App\Models\Users\User;
 use App\Repositories\Contracts\Users\IUserRepository;
 use App\Repositories\Traits\FindTrait;
+use App\Repositories\Traits\StandartTrait;
 
 class UserRepository extends Singleton implements IUserRepository
 {
-    use FindTrait;
+    use FindTrait, StandartTrait;
 
     public function __construct()
     {
@@ -114,11 +115,18 @@ class UserRepository extends Singleton implements IUserRepository
 
     public function delete(int $id)
     {
+        if (is_null($id) || $id <= 0) {
+            return false;
+        }
+
+        $user = $this->findById($id);
+        if (is_null($user)) {
+            return false;
+        }
+
         try {
-            $query = "DELETE FROM {$this->model->getTable()} WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id);
-            return $stmt->execute();
+            $deleted = $this->toDelete($id);
+            return $deleted;
         } catch (\PDOException $e) {
             return false;
         }

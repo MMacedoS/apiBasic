@@ -89,23 +89,26 @@ class FuncionarioRepository extends Singleton implements IFuncionarioRepository
             return false;
         }
 
+        $this->conn->beginTransaction();
         try {
-            $query = "DELETE FROM {$this->model->getTable()} WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id);
+            $deleted = $this->toDelete($funcionario->id);
 
-            $register = $stmt->execute();
-            if ($register) {
-                if ($funcionario->person_id) {
-                    $personRepo = PessoaRepository::getInstance();
-                    $personDeleted = $personRepo->delete($funcionario->person_id);
-                    if (!$personDeleted) {
-                        return false;
-                    }
+            if (!$deleted) {
+                $this->conn->rollBack();
+                return false;
+            }
+            if ($funcionario->person_id) {
+                $personRepo = PessoaRepository::getInstance();
+                $personDeleted = $personRepo->toDelete($funcionario->person_id);
+                if (!$personDeleted) {
+                    $this->conn->rollBack();
+                    return false;
                 }
             }
-            return $register;
+            $this->conn->commit();
+            return $deleted;
         } catch (\PDOException $e) {
+            $this->conn->rollBack();
             return false;
         }
     }

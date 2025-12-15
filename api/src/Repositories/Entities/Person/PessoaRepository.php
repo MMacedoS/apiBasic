@@ -131,24 +131,17 @@ class PessoaRepository extends Singleton implements IPessoaRepository
             return false;
         }
 
-        $this->conn->beginTransaction();
         try {
-            $query = "DELETE FROM {$this->model->getTable()} WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id);
-            $result = $stmt->execute();
+            $deleted = $this->toDelete($pessoa->id);
 
-            if ($pessoa->user_id) {
+            if (!is_null($pessoa->user_id)) {
                 $userDeleted = $this->userRepository->delete($pessoa->user_id);
                 if (!$userDeleted) {
-                    $this->conn->rollBack();
                     return false;
                 }
             }
-            $this->conn->commit();
-            return $result;
+            return $deleted;
         } catch (\PDOException $e) {
-            $this->conn->rollBack();
             return false;
         }
     }

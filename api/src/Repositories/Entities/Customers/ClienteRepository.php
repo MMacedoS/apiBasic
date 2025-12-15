@@ -93,24 +93,26 @@ class ClienteRepository extends Singleton implements IClienteRepository
             return false;
         }
 
+        $this->conn->beginTransaction();
         try {
-            $query = "DELETE FROM {$this->model->getTable()} WHERE id = :id";
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':id', $id);
-            $register = $stmt->execute();
+            $deleted = $this->toDelete($customer->id);
 
-            if ($register) {
-                if ($customer->person_id) {
-                    $userRepo = PessoaRepository::getInstance();
-                    $userRepo->delete($customer->person_id);
-                    if (!$userRepo) {
-                        return false;
-                    }
+            if (!$deleted) {
+                $this->conn->rollBack();
+                return false;
+            }
+            if (!is_null($customer->person_id)) {
+                $personRepo = PessoaRepository::getInstance();
+                $personDeleted = $personRepo->delete($customer->person_id);
+                if (!$personDeleted) {
+                    $this->conn->rollBack();
+                    return false;
                 }
             }
-
-            return $register;
+            $this->conn->commit();
+            return $deleted;
         } catch (\PDOException $e) {
+            $this->conn->rollBack();
             return false;
         }
     }

@@ -78,7 +78,14 @@ class Core
 
     private static function runMiddlewares($request, array $middlewares): ?array
     {
-        foreach ($middlewares as $middleware) {
+        foreach ($middlewares as $key => $middleware) {
+            $params = [];
+            if (is_string($key)) {
+                $middlewareName = $key;
+                $params = $middleware;
+                $middleware = $middlewareName;
+            }
+
             $middlewareClass = "App\\Http\\Controllers\\Middleware\\" . ucfirst($middleware);
 
             if (!class_exists($middlewareClass)) {
@@ -91,7 +98,7 @@ class Core
             $next = function ($req) {
                 return null;
             };
-            $result = $middlewareClass::handle($request, $next);
+            $result = $middlewareClass::handle($request, $next, $params);
 
             if ($result !== null) {
                 return $result;
