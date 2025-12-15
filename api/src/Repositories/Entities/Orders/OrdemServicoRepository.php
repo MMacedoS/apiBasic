@@ -16,7 +16,7 @@ class OrdemServicoRepository extends Singleton implements IOrdemServicoRepositor
     public function __construct()
     {
         $this->model = new OrdemServico();
-        $this->conn = Database::getInstance()->getConnections();
+        $this->conn = Database::getInstance()->getConnection();
     }
 
     public function assignServicoToOrdem(int $ordemId, int $servicoId): bool

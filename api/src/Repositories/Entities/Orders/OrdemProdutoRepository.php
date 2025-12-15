@@ -16,7 +16,7 @@ class OrdemProdutoRepository extends Singleton implements IOrdemProdutoRepositor
     public function __construct()
     {
         $this->model = new OrdemProduto();
-        $this->conn = Database::getInstance()->getConnections();
+        $this->conn = Database::getInstance()->getConnection();
     }
 
     public function assignProdutoToOrdem(int $ordemId, int $produtoId): bool

@@ -18,7 +18,7 @@ class OrdemRepository extends Singleton implements IOrdemRepository
     public function __construct()
     {
         $this->model = new Ordem();
-        $this->conn = Database::getInstance()->getConnections();
+        $this->conn = Database::getInstance()->getConnection();
         $this->ordemServicoRepository = OrdemServicoRepository::getInstance();
         $this->ordemProdutoRepository = OrdemProdutoRepository::getInstance();
     }

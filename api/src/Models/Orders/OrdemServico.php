@@ -15,4 +15,14 @@ class OrdemServico
     public ?float $valor;
     public ?string $created_at;
     public ?string $updated_at;
+
+    public function fill(array $data): self
+    {
+        foreach ($data as $key => $value) {
+            if (property_exists($this, $key)) {
+                $this->$key = $value;
+            }
+        }
+        return $this;
+    }
 }
