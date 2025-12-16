@@ -228,7 +228,7 @@ class OrdemController extends Controller
         ]);
     }
 
-    public function assignProductToOrder(Request $request, string $uuid, string $productUuid)
+    public function assignProductToOrder(Request $request, string $uuid)
     {
         $order = $this->ordemRepository->findByUuid($uuid);
 
@@ -238,30 +238,54 @@ class OrdemController extends Controller
             ], 404);
         }
 
-        $product = $this->produtoRepository->findByUuid($productUuid);
+        $data = $request->all();
 
-        if (is_null($product)) {
+        $validatedData = $this->validate($data, [
+            'products' => 'required|array'
+        ]);
+
+        if (is_null($validatedData)) {
             return $this->respondJson([
-                'message' => 'Produto não encontrado'
-            ], 404);
+                'message' => 'Dados inválidos',
+                'errors' => $this->getErrors()
+            ], 422);
         }
 
-        $assigned = $this->ordemProdutoRepository
-            ->assignProdutoToOrdem(
-                $order->id,
-                $product->id,
-                $product->preco,
-                1
-            );
-
-        if (!$assigned) {
+        if (
+            empty($validatedData['products']) ||
+            !is_array($validatedData['products']) ||
+            count($validatedData['products']) === 0
+        ) {
             return $this->respondJson([
-                'message' => 'Erro ao atribuir o produto à ordem de serviço'
-            ], 500);
+                'message' => 'Nenhum produto fornecido para atribuição'
+            ], 422);
         }
 
+        foreach ($validatedData['products'] as $productUuid) {
+            $product = $this->produtoRepository->findByUuid($productUuid['product']);
+
+            if (is_null($product)) {
+                return $this->respondJson([
+                    'message' => "Produto com UUID {$productUuid} não encontrado"
+                ], 404);
+            }
+
+            $assigned = $this->ordemProdutoRepository
+                ->assignProdutoToOrdem(
+                    $order->id,
+                    $product->id,
+                    $product->preco,
+                    $productUuid['quantity']
+                );
+
+            if (!$assigned) {
+                return $this->respondJson([
+                    'message' => "Erro ao atribuir o produto com UUID {$productUuid} à ordem de serviço"
+                ], 500);
+            }
+        }
         return $this->respondJson([
-            'message' => 'Produto atribuído à ordem de serviço com sucesso'
+            'message' => 'Produtos atribuídos à ordem de serviço com sucesso'
         ]);
     }
 
@@ -296,7 +320,7 @@ class OrdemController extends Controller
         ]);
     }
 
-    public function assignServiceToOrder(Request $request, string $uuid, string $serviceUuid)
+    public function assignServiceToOrder(Request $request, string $uuid)
     {
         $order = $this->ordemRepository->findByUuid($uuid);
 
@@ -306,29 +330,52 @@ class OrdemController extends Controller
             ], 404);
         }
 
-        $service = $this->serviceRepository->findByUuid($serviceUuid);
+        $data = $request->all();
 
-        if (is_null($service)) {
+        $validatedData = $this->validate($data, [
+            'services' => 'required|array',
+        ]);
+
+        if (is_null($validatedData)) {
             return $this->respondJson([
-                'message' => 'Serviço não encontrado'
-            ], 404);
+                'message' => 'Dados inválidos',
+                'errors' => $this->getErrors()
+            ], 422);
         }
 
-        $assigned = $this->ordemServicoRepository
-            ->assignServicoToOrdem(
-                $order->id,
-                $service->id,
-                $service->valor
-            );
-
-        if (!$assigned) {
+        if (
+            empty($validatedData['services']) ||
+            !is_array($validatedData['services']) ||
+            count($validatedData['services']) === 0
+        ) {
             return $this->respondJson([
-                'message' => 'Erro ao atribuir o serviço à ordem de serviço'
-            ], 500);
+                'message' => 'Nenhum serviço fornecido para atribuição'
+            ], 422);
         }
 
+        foreach ($validatedData['services'] as $serviceUuid) {
+            $service = $this->serviceRepository->findByUuid($serviceUuid);
+            if (is_null($service)) {
+                return $this->respondJson([
+                    'message' => "Serviço com UUID {$serviceUuid} não encontrado"
+                ], 404);
+            }
+
+            $assigned = $this->ordemServicoRepository
+                ->assignServicoToOrdem(
+                    $order->id,
+                    $service->id,
+                    $service->valor
+                );
+
+            if (!$assigned) {
+                return $this->respondJson([
+                    'message' => "Erro ao atribuir o serviço com UUID {$serviceUuid} à ordem de serviço"
+                ], 500);
+            }
+        }
         return $this->respondJson([
-            'message' => 'Serviço atribuído à ordem de serviço com sucesso'
+            'message' => 'Serviços atribuídos à ordem de serviço com sucesso'
         ]);
     }
 

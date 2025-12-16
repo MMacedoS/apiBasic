@@ -43,7 +43,7 @@ class OrdemProdutoRepository extends Singleton implements IOrdemProdutoRepositor
             return false;
         }
 
-        $query = "DELETE FROM {$this->model->getTable()} WHERE order_id = :ordem_id AND produto_id = :produto_id";
+        $query = "DELETE FROM {$this->model->getTable()} WHERE order_id = :ordem_id AND product_id = :produto_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':ordem_id', $ordemId);
         $stmt->bindParam(':produto_id', $produtoId);

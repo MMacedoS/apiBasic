@@ -31,6 +31,7 @@ class OrdemServicoRepository extends Singleton implements IOrdemServicoRepositor
             'service_id' => $servicoId,
             'valor' => $valor,
         ]);
+
         $created = $this->toCreate($service_order);
         return $created !== null;
     }
@@ -41,7 +42,7 @@ class OrdemServicoRepository extends Singleton implements IOrdemServicoRepositor
             return false;
         }
 
-        $query = "DELETE FROM {$this->model->getTable()} WHERE order_id = :ordem_id AND servico_id = :servico_id";
+        $query = "DELETE FROM {$this->model->getTable()} WHERE order_id = :ordem_id AND service_id = :servico_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':ordem_id', $ordemId);
         $stmt->bindParam(':servico_id', $servicoId);

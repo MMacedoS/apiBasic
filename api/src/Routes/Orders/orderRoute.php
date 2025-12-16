@@ -21,6 +21,8 @@ Route::group(['middleware' => ['auth', 'permission' => [
     'view-my-customer'
 ]]], function () {
     Route::get('/orders-list', [OrdemController::class, 'indexWithoutPagination']);
+    Route::post('/orders/{uuid}/assign-service', [OrdemController::class, 'assignServiceToOrder']);
+    Route::delete('/orders/{uuid}/remove-service/{uuidService}', [OrdemController::class, 'removeServiceFromOrder']);
     Route::post('/orders/{uuid}/assign-product', [OrdemController::class, 'assignProductToOrder']);
-    Route::post('/orders/{uuid}/remove-product', [OrdemController::class, 'removeProductFromOrder']);
+    Route::delete('/orders/{uuid}/remove-product/{uuidProduct}', [OrdemController::class, 'removeProductFromOrder']);
 });
