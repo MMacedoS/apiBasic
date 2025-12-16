@@ -246,7 +246,13 @@ class OrdemController extends Controller
             ], 404);
         }
 
-        $assigned = $this->ordemProdutoRepository->assignProdutoToOrdem($order->id, $product->id);
+        $assigned = $this->ordemProdutoRepository
+            ->assignProdutoToOrdem(
+                $order->id,
+                $product->id,
+                $product->preco,
+                1
+            );
 
         if (!$assigned) {
             return $this->respondJson([
@@ -308,7 +314,12 @@ class OrdemController extends Controller
             ], 404);
         }
 
-        $assigned = $this->ordemServicoRepository->assignServicoToOrdem($order->id, $service->id);
+        $assigned = $this->ordemServicoRepository
+            ->assignServicoToOrdem(
+                $order->id,
+                $service->id,
+                $service->valor
+            );
 
         if (!$assigned) {
             return $this->respondJson([

@@ -1,13 +1,16 @@
-# API RESTful com PHP Puro 8.2
+# API RESTful - Sistema de Ordem de Serviço
 
 ## Sobre o Projeto
 
-Este projeto consiste no desenvolvimento de uma **API RESTful** utilizando **PHP puro 8.2**, sem frameworks externos, aplicando conceitos de **Clean Architecture** e **Clean Code**.
+Este projeto consiste no desenvolvimento de uma **API RESTful para Sistema de Ordem de Serviço** utilizando **PHP puro 8.2**, sem frameworks externos, aplicando conceitos de **Clean Architecture** e **Clean Code**.
+
+O sistema permite o gerenciamento completo de ordens de serviço, incluindo cadastro de clientes, funcionários, produtos, serviços e o controle de todas as etapas de uma ordem de serviço, desde a abertura até o fechamento.
 
 ## Objetivos
 
-- Construir uma API robusta e escalável com PHP puro
+- Construir uma API robusta e escalável com PHP puro para gestão de ordens de serviço
 - Implementar autenticação e autorização com **JWT (JSON Web Tokens)**
+- Gerenciar clientes, funcionários, produtos, serviços e ordens de serviço
 - Aplicar princípios de **Clean Architecture**
 - Seguir boas práticas de **Clean Code**
 - Demonstrar domínio de PHP moderno e padrões de projeto
@@ -47,7 +50,31 @@ api/
 └── index.php
 ```
 
-## Funcionalidades Implementadas
+## Módulos do Sistema
+
+### 👥 Gestão de Pessoas
+
+- **Clientes**: Cadastro e gerenciamento de clientes
+- **Funcionários**: Controle de funcionários e suas informações
+
+### 📋 Gestão de Ordens de Serviço
+
+- **Ordens de Serviço**: Criação, atualização e acompanhamento de ordens
+- **Produtos**: Associação de produtos às ordens de serviço
+- **Serviços**: Vinculação de serviços prestados às ordens
+
+### 🔐 Autenticação e Autorização
+
+- **Usuários**: Gerenciamento de usuários do sistema
+- **JWT**: Sistema completo de autenticação por token
+- **Permissões**: Controle de acesso baseado em níveis (admin, padrão, cliente)
+
+### 📦 Catálogo
+
+- **Produtos**: Cadastro de produtos e peças
+- **Serviços**: Registro de serviços oferecidos
+
+## Funcionalidades Técnicas Implementadas
 
 ### Core
 
@@ -63,14 +90,23 @@ api/
   - Métodos: `method()`, `url()`, `getRequestData()`, `header()`, `setUser()`
 - [x] Classe `Response` para padronização de respostas JSON
   - Método: `json($data, $statusCode)`
-- [x] Controller base com método `respondJson()` e trait `Validators`
-- [x] Injeção automática do objeto Request nos controladores
 
-### Autenticação e Segurança
+### Banco de Dados
 
-- [x] Sistema JWT completo (geração, validação e invalidação de tokens)
-- [x] Middleware de autenticação (`Auth`)
-- [x] Gestão de tokens em banco de dados
+- [x] Conexão PDO com MySQL via Singleton
+- [x] Repository Pattern com interfaces
+- [x] Traits para operações comuns (FindTrait, StandartTrait, etc)
+- [x] Estrutura de tabelas completa
+  - Tabela `users` (gerenciamento de usuários)
+  - Tabela `tokens` (controle de JWT)
+  - Tabela `persons` (dados pessoais base)
+  - Tabela `customers` (clientes)
+  - Tabela `employees` (funcionários)
+  - Tabela `products` (catálogo de produtos)
+  - Tabela `services` (catálogo de serviços)
+  - Tabela `service_orders` (ordens de serviço)
+  - Tabela `service_order_services` (serviços da ordem)
+  - Tabela `service_order_products` (produtos da ordem)dos
 - [x] Sistema de login/logout
 - [x] Proteção de rotas sensíveis com middleware
 
@@ -113,13 +149,29 @@ api/
 - [x] Resposta 405 para métodos HTTP não permitidos
 - [x] Resposta 500 para handlers inválidos ou métodos não encontrados
 - [x] Resposta 401 para autenticação falha
-- [x] Resposta 422 para erros de validação
 
-### Utilitários
+## Próximas Funcionalidades
 
-- [x] Funções helpers (`dd()`, `dump()`)
-- [x] Variáveis de ambiente com DotEnv
-- [x] Docker Compose com PHP 8.2, Nginx, MySQL e phpMyAdmin
+### Melhorias no Sistema de Ordens de Serviço
+
+- [ ] Dashboard com estatísticas de ordens
+- [ ] Sistema de notificações (email/SMS)
+- [ ] Histórico de alterações nas ordens
+- [ ] Anexo de fotos e documentos
+- [ ] Assinatura digital do cliente
+- [ ] Geração de PDF das ordens
+- [ ] Sistema de orçamento prévio
+
+### Recursos Técnicos
+
+- [ ] Rate limiting
+- [ ] Documentação da API (Swagger/OpenAPI)
+- [ ] Sistema de permissões e roles mais granular
+- [ ] Recuperação de senha
+- [ ] Verificação de email
+- [ ] Logs de auditoria
+- [ ] Cache de consultas frequentes
+- [ ] Backup automático de dados
 
 ## Próximas Funcionalidades
 
@@ -170,15 +222,26 @@ curl http://localhost:8080/api/v1/health
 
 ### Localmente
 
-```bash
+````bash
 # Instale as dependências
 cd api
 composer install
+## Documentação da API
 
-# Inicie o servidor PHP
-php -S localhost:8000
-```
+A API está organizada em módulos para facilitar a manutenção e escalabilidade:
 
+- **Autenticação**: Login/Logout com JWT
+- **Usuários**: Gerenciamento de usuários do sistema
+- **Pessoas**: Dados pessoais base
+- **Clientes**: Cadastro e gestão de clientes
+- **Funcionários**: Controle de funcionários
+- **Produtos**: Catálogo de produtos e peças
+- **Serviços**: Registro de serviços oferecidos
+- **Ordens de Serviço**: Gestão completa de ordens
+
+### Autenticação
+
+Todas as rotas protegidas requerem um token JWT no header `Authorization`.
 ## Princípios Aplicados
 
 ### Clean Architecture
@@ -212,7 +275,7 @@ Todas as rotas protegidas requerem um token JWT no header `Authorization`.
   "email": "user@example.com",
   "password": "senha123"
 }
-```
+````
 
 - **Resposta Sucesso (200)**:
 
@@ -222,9 +285,9 @@ Todas as rotas protegidas requerem um token JWT no header `Authorization`.
   "data": {
     "token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
     "user": {
-      "id": 1,
-      "uuid": "550e8400-e29b-41d4-a716-446655440000",
-      "name": "John Doe",
+### Endpoints Públicos
+
+#### Health Checkhn Doe",
       "email": "user@example.com"
     }
   }
@@ -247,18 +310,23 @@ Todas as rotas protegidas requerem um token JWT no header `Authorization`.
 
 ### Endpoints Disponíveis
 
-#### Health Check
+}
 
-**GET** `/api/v1/health`
+````
 
-- **Descrição**: Verificar status da API
-- **Resposta**:
+---
+
+## Endpoints Protegidos
+
+Todas as rotas abaixo requerem autenticação via JWT no header: `Authorization: Bearer {token}`
+
+### 👤 Usuários
 
 ```json
 {
   "message": "This API is healthy"
 }
-```
+````
 
 #### Home
 
@@ -358,19 +426,304 @@ Todas as rotas abaixo requerem autenticação via JWT.
 
 - **Headers**: `Authorization: Bearer {token}`
 - **Resposta**:
+  }
+
+````
+
+---
+
+### 👥 Clientes
+
+#### Listar Clientes
+
+**GET** `/api/v1/customers`
+
+#### Criar Cliente
+
+**POST** `/api/v1/customers`
+
+**Body**:
+```json
+{
+  "name": "João Silva",
+  "email": "joao@email.com",
+  "phone": "11999999999",
+  "cpf_cnpj": "12345678900",
+  "address": "Rua Exemplo, 123",
+  "city": "São Paulo",
+  "state": "SP"
+}
+````
+
+#### Atualizar Cliente
+
+**PUT** `/api/v1/customers/{uuid}`
+
+#### Remover Cliente
+
+**DELETE** `/api/v1/customers/{uuid}`
+
+---
+
+### Exemplos de Uso
+
+#### cURL - Fluxo Completo de Ordem de Serviço
+
+```bash
+# 1. Login
+TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@sistema.com","password":"senha123"}' \
+  | jq -r '.data.token')
+
+# 2. Criar Cliente
+CUSTOMER=$(curl -s -X POST http://localhost:8080/api/v1/customers \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"João Silva",
+    "email":"joao@email.com",
+    "phone":"11999999999"
+  }')
+
+# 3. Criar Serviço
+SERVICE=$(curl -s -X POST http://localhost:8080/api/v1/services \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"Manutenção",
+    "price":200.00
+  }')
+
+# 4. Criar Ordem de Serviço
+ORDER=$(curl -s -X POST http://localhost:8080/api/v1/orders \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id":1,
+    "descricao":"Equipamento com defeito",
+    "situacao":"aberta",
+    "servicos":["uuid-do-servico"]
+  }')
+
+# 5. Atualizar Status
+curl -X PATCH http://localhost:8080/api/v1/orders/{uuid}/status \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"em_andamento"}'
+
+# 6. Fechar Ordem
+curl -X POST http://localhost:8080/api/v1/orders/{uuid}/close \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "laudo_tecnico":"Serviço concluído",
+    "observacoes":"Cliente satisfeito"
+  }'
+```
+
+#### cURL - Básicoonários
+
+**GET** `/api/v1/employees`
+
+#### Criar Funcionário
+
+**POST** `/api/v1/employees`
+
+**Body**:
 
 ```json
 {
-  "message": "Perfil do usuário",
+  "name": "Maria Santos",
+  "email": "maria@empresa.com",
+  "phone": "11988888888",
+  "cpf": "98765432100",
+  "position": "Técnico",
+  "salary": 3500.0
+}
+```
+
+#### Atualizar Funcionário
+
+**PUT** `/api/v1/employees/{uuid}`
+
+#### Remover Funcionário
+
+**DELETE** `/api/v1/employees/{uuid}`
+
+---
+
+### 📦 Produtos
+
+#### Listar Produtos
+
+**GET** `/api/v1/products`
+
+#### Criar Produto
+
+**POST** `/api/v1/products`
+
+**Body**:
+
+```json
+{
+  "name": "Peça XYZ",
+  "description": "Descrição do produto",
+  "price": 150.0,
+  "stock": 50,
+  "code": "PROD-001"
+}
+```
+
+#### Atualizar Produto
+
+**PUT** `/api/v1/products/{uuid}`
+
+#### Remover Produto
+
+**DELETE** `/api/v1/products/{uuid}`
+
+---
+
+### 🔧 Serviços
+
+#### Listar Serviços
+
+**GET** `/api/v1/services`
+
+#### Criar Serviço
+
+**POST** `/api/v1/services`
+
+**Body**:
+
+```json
+{
+  "name": "Manutenção Preventiva",
+  "description": "Serviço completo de manutenção",
+  "price": 200.0,
+  "estimated_time": "2 horas"
+}
+```
+
+#### Atualizar Serviço
+
+**PUT** `/api/v1/services/{uuid}`
+
+#### Remover Serviço
+
+**DELETE** `/api/v1/services/{uuid}`
+
+---
+
+### 📋 Ordens de Serviço
+
+#### Listar Ordens de Serviço
+
+**GET** `/api/v1/orders`
+
+#### Criar Ordem de Serviço
+
+**POST** `/api/v1/orders`
+
+**Body**:
+
+```json
+{
+  "customer_id": 1,
+  "descricao": "Equipamento com defeito",
+  "observacoes": "Cliente relatou problema intermitente",
+  "situacao": "aberta",
+  "servicos": ["uuid-servico-1", "uuid-servico-2"],
+  "produtos": ["uuid-produto-1"]
+}
+```
+
+#### Buscar Ordem por UUID
+
+**GET** `/api/v1/orders/{uuid}`
+
+**Resposta**:
+
+```json
+{
+  "message": "Ordem de serviço encontrada",
   "data": {
     "id": 1,
     "uuid": "550e8400-e29b-41d4-a716-446655440000",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "access": "admin"
+    "customer_id": 1,
+    "descricao": "Equipamento com defeito",
+    "situacao": "aberta",
+    "data_abertura": "2025-12-16 10:30:00",
+    "servicos": [],
+    "produtos": []
   }
 }
 ```
+
+#### Atualizar Ordem de Serviço
+
+**PUT** `/api/v1/orders/{uuid}`
+
+**Body**:
+
+```json
+{
+  "descricao": "Descrição atualizada",
+  "situacao": "em_andamento",
+  "laudo_tecnico": "Diagnóstico realizado"
+}
+```
+
+#### Atualizar Status da Ordem
+
+**PATCH** `/api/v1/orders/{uuid}/status`
+
+**Body**:
+
+```json
+{
+  "status": "concluida"
+}
+```
+
+**Status possíveis**: `aberta`, `em_andamento`, `aguardando_pecas`, `concluida`, `cancelada`
+
+#### Fechar Ordem de Serviço
+
+**POST** `/api/v1/orders/{uuid}/close`
+
+**Body**:
+
+```json
+{
+  "laudo_tecnico": "Serviço concluído com sucesso",
+  "observacoes": "Cliente satisfeito"
+}
+```
+
+#### Listar Ordens por Cliente
+
+**GET** `/api/v1/orders/customer/{customerId}`
+
+#### Remover Ordem de Serviço
+
+**DELETE** `/api/v1/orders/{uuid}`
+
+---
+
+### Formato de Resposta Padrãoo",
+
+"data": {
+"id": 1,
+"uuid": "550e8400-e29b-41d4-a716-446655440000",
+"name": "John Doe",
+"email": "john@example.com",
+"access": "admin"
+}
+}
+
+````
 
 #### Atualizar Perfil
 
@@ -386,7 +739,7 @@ Todas as rotas abaixo requerem autenticação via JWT.
   "password": "novaSenha123",
   "password_confirmation": "novaSenha123"
 }
-```
+````
 
 ### Formato de Resposta Padrão
 
