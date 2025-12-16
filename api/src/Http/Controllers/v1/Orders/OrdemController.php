@@ -212,8 +212,15 @@ class OrdemController extends Controller
         $data = $request->all();
 
         $validatedData = $this->validate($data, [
-            'status' => 'required|string|in:open,closed,in_progress',
+            'status' => 'required|string|in:aberta,concluida,em_andamento,cancelada,orcamento',
         ]);
+
+        if (is_null($validatedData)) {
+            return $this->respondJson([
+                'message' => 'Dados inválidos',
+                'errors' => $this->getErrors()
+            ], 422);
+        }
 
         $updated = $this->ordemRepository->updateOrdemStatus($order->id, $validatedData['status']);
 

@@ -43,7 +43,7 @@ class OrdemRepository extends Singleton implements IOrdemRepository
 
     public function updateOrdemStatus(int $ordemId, string $status): bool
     {
-        $query = "UPDATE {$this->model->getTable()} SET status = :status WHERE id = :id";
+        $query = "UPDATE {$this->model->getTable()} SET situacao = :status WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':status', $status);
         $stmt->bindParam(':id', $ordemId);

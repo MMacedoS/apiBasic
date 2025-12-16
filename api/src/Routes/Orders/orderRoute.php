@@ -3,12 +3,13 @@
 use App\Config\Route;
 use App\Http\Controllers\v1\Orders\OrdemController;
 
-Route::group(['middleware' => ['auth', 'role' => 'admin']], function () {
+Route::group(['middleware' => ['auth', 'role' => 'padrao']], function () {
     Route::get('/orders', [OrdemController::class, 'index']);
     Route::get('/orders/{uuid}', [OrdemController::class, 'show']);
     Route::post('/orders', [OrdemController::class, 'store']);
     Route::put('/orders/{uuid}', [OrdemController::class, 'update']);
     Route::delete('/orders/{uuid}', [OrdemController::class, 'destroy']);
+    Route::post('/orders/{uuid}/change-status', [OrdemController::class, 'changeStatus']);
 });
 
 Route::group(
@@ -27,6 +28,9 @@ Route::group(
         ]
     ],
     function () {
+        Route::get('/my-orders', [OrdemController::class, 'myOrders']);
+        Route::get('/my-order/{uuid}', [OrdemController::class, 'myOrderDetail']);
+        Route::get('/my-services', [OrdemController::class, 'myServices']);
         Route::get('/orders-list', [OrdemController::class, 'indexWithoutPagination']);
         Route::post('/orders/{uuid}/assign-service', [OrdemController::class, 'assignServiceToOrder']);
         Route::delete('/orders/{uuid}/remove-service/{uuidService}', [OrdemController::class, 'removeServiceFromOrder']);

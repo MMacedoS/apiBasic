@@ -14,7 +14,11 @@ class Role
 
         $roleLabel = Permissao::from($user->access)->label();
 
-        if (!$user || $roleLabel !== $role) {
+        if ($roleLabel === 'admin') {
+            return $next($request);
+        }
+
+        if (!$user || ($roleLabel !== $role)) {
             return Response::json(['message' => 'Não autorizado'], 403);
         }
 
