@@ -92,21 +92,25 @@ trait FindTrait
         $stmt->execute();
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $entities = [];
-        foreach ($results as $row) {
-            $entities[] = $this->model->fill($row);
-        }
-        return $entities;
+        return $this->prepareModels($results);
     }
 
     public function existsByField(string $field, $value): bool
     {
-        $query = "SELECT COUNT(*) as count FROM {$this->model->getTable()} WHERE $field = :value";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':value', $value);
-        $stmt->execute();
-        $result = $stmt->fetch();
+        try {
+            if (is_null($value)) {
+                return false;
+            }
+            $query = "SELECT COUNT(*) as count FROM {$this->model->getTable()} WHERE $field = :value";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':value', $value);
+            $stmt->execute();
+            $result = $stmt->fetch();
 
-        return $result['count'] > 0;
+            return $result['count'] > 0;
+        } catch (\PDOException $e) {
+            dd(1);
+            return false;
+        }
     }
 }

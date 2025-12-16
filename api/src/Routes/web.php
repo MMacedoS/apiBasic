@@ -14,3 +14,5 @@ require_once __DIR__ . '/Services/serviceRoute.php';
 require_once __DIR__ . '/Person/personRoute.php';
 require_once __DIR__ . '/Customer/customerRoute.php';
 require_once __DIR__ . '/Employees/employeesRoute.php';
+require_once __DIR__ . '/Products/productRoute.php';
+require_once __DIR__ . '/Orders/orderRoute.php';

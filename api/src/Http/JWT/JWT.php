@@ -53,17 +53,6 @@ class JWT
         return $payload;
     }
 
-    public static function invalidateToken(string $token): bool
-    {
-        $payload = self::validateToken($token);
-        if (is_null($payload)) {
-            return true;
-        }
-
-        $tokenRepository = TokenRepository::getInstance();
-        return $tokenRepository->delete($token);
-    }
-
     public static function refreshToken(string $token, int $expiration): ?string
     {
         $payload = self::validateToken($token);

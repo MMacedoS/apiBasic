@@ -6,6 +6,7 @@ use App\Config\Database;
 use App\Config\Singleton;
 use App\Models\Orders\OrdemProduto;
 use App\Repositories\Contracts\Orders\IOrdemProdutoRepository;
+use App\Repositories\Entities\Products\ProdutoRepository;
 use App\Repositories\Traits\FindTrait;
 use App\Repositories\Traits\StandartTrait;
 
@@ -19,17 +20,21 @@ class OrdemProdutoRepository extends Singleton implements IOrdemProdutoRepositor
         $this->conn = Database::getInstance()->getConnection();
     }
 
-    public function assignProdutoToOrdem(int $ordemId, int $produtoId): bool
+    public function assignProdutoToOrdem(int $ordemId, int $produtoId, float $valor, int $quantidade): bool
     {
         if (empty($ordemId) || empty($produtoId)) {
             return false;
         }
 
-        $query = "INSERT INTO ordem_produtos (ordem_id, produto_id) VALUES (:ordem_id, :produto_id)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':ordem_id', $ordemId);
-        $stmt->bindParam(':produto_id', $produtoId);
-        return $stmt->execute();
+        $service_order = $this->model->fill([
+            'order_id' => $ordemId,
+            'product_id' => $produtoId,
+            'valor' => $valor,
+            'quantidade' => $quantidade
+        ]);
+
+        $created = $this->toCreate($service_order);
+        return $created !== null;
     }
 
     public function removeProdutoFromOrdem(int $ordemId, int $produtoId): bool
@@ -38,7 +43,7 @@ class OrdemProdutoRepository extends Singleton implements IOrdemProdutoRepositor
             return false;
         }
 
-        $query = "DELETE FROM ordem_produtos WHERE ordem_id = :ordem_id AND produto_id = :produto_id";
+        $query = "DELETE FROM {$this->model->getTable()} WHERE order_id = :ordem_id AND produto_id = :produto_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':ordem_id', $ordemId);
         $stmt->bindParam(':produto_id', $produtoId);
@@ -51,11 +56,12 @@ class OrdemProdutoRepository extends Singleton implements IOrdemProdutoRepositor
             return [];
         }
 
-        $query = "SELECT * FROM ordem_produtos WHERE ordem_id = :ordem_id";
+        $query = "SELECT * FROM {$this->model->getTable()} WHERE order_id = :ordem_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':ordem_id', $ordemId);
         $stmt->execute();
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $this->prepareModels($results);
     }
 
     public function calculateTotalCost(int $ordemId): float
@@ -64,17 +70,33 @@ class OrdemProdutoRepository extends Singleton implements IOrdemProdutoRepositor
             return 0.0;
         }
 
-        $query = "
-            SELECT SUM(p.preco) as total_cost
-            FROM ordem_produtos op
-            JOIN produtos p ON op.produto_id = p.id
-            WHERE op.ordem_id = :ordem_id
+        $query = "SELECT SUM(p.preco) AS total_cost
+            FROM {$this->model->getTable()} op
+            JOIN products p ON op.product_id = p.id
+            WHERE op.order_id = :ordem_id
         ";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':ordem_id', $ordemId);
         $stmt->execute();
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-
         return $result['total_cost'] ?? 0.0;
+    }
+
+    public function loadProductByProductUuid(string $productUuid)
+    {
+        $productRepository = ProdutoRepository::getInstance();
+        return $productRepository->findByUuid($productUuid);
+    }
+
+    public function deleteByOrdemId(int $ordemId): bool
+    {
+        if (empty($ordemId)) {
+            return false;
+        }
+
+        $query = "DELETE FROM {$this->model->getTable()} WHERE order_id = :ordem_id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':ordem_id', $ordemId);
+        return $stmt->execute();
     }
 }

@@ -7,6 +7,7 @@ use App\Http\JWT\JWT;
 use App\Http\Request\Request;
 use App\Http\Trait\SendEmailTrait;
 use App\Repositories\Contracts\Users\IUserRepository;
+use App\Repositories\Entities\Users\TokenRepository;
 use App\Transformers\Users\UserTransformer;
 
 class UserController extends Controller
@@ -226,7 +227,8 @@ class UserController extends Controller
             ], 400);
         }
 
-        $token = JWT::invalidateToken($token);
+        $tokenRepository = TokenRepository::getInstance();
+        $tokenRepository->delete($token);
 
         return $this->respondJson([
             'message' => 'Logout realizado com sucesso',

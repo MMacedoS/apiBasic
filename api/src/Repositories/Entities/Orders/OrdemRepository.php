@@ -25,7 +25,7 @@ class OrdemRepository extends Singleton implements IOrdemRepository
 
     public function getOrdensByCustomerId(int $customerId): array
     {
-        $query = "SELECT * FROM ordens WHERE customer_id = :customer_id";
+        $query = "SELECT * FROM {$this->model->getTable()} WHERE customer_id = :customer_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':customer_id', $customerId);
         $stmt->execute();
@@ -34,7 +34,7 @@ class OrdemRepository extends Singleton implements IOrdemRepository
 
     public function getOrdensByStatus(string $status): array
     {
-        $query = "SELECT * FROM ordens WHERE status = :status";
+        $query = "SELECT * FROM {$this->model->getTable()} WHERE status = :status";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':status', $status);
         $stmt->execute();
@@ -43,7 +43,7 @@ class OrdemRepository extends Singleton implements IOrdemRepository
 
     public function updateOrdemStatus(int $ordemId, string $status): bool
     {
-        $query = "UPDATE ordens SET status = :status WHERE id = :id";
+        $query = "UPDATE {$this->model->getTable()} SET status = :status WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':status', $status);
         $stmt->bindParam(':id', $ordemId);
@@ -56,27 +56,66 @@ class OrdemRepository extends Singleton implements IOrdemRepository
             return null;
         }
 
+        $this->conn->beginTransaction();
         try {
-            $order = $this->model->fill($data);
-            $create = $this->toCreate($order);
-            if (!$create) {
+            $exists = $this->findAll(
+                [
+                    'customer_id' => $data['customer_id'] ?? null,
+                    'situacao' => $data['situacao'] ?? null,
+                    'descricao' => $data['descricao'] ?? null,
+                ]
+            );
+
+            if (count($exists) > 0) {
+                $this->conn->rollBack();
                 return null;
             }
 
+            $order = $this->model->fill($data);
+            $create = $this->toCreate($order);
+            if (!$create) {
+                $this->conn->rollBack();
+                return null;
+            }
+
+            $order->id = (int) $this->conn->lastInsertId();
+
             if (isset($data['servicos']) && is_array($data['servicos'])) {
                 foreach ($data['servicos'] as $servicoId) {
-                    $this->ordemServicoRepository->assignServicoToOrdem($order->id, $servicoId);
+                    $servico = $this->ordemServicoRepository->loadServiceByServiceUuid($servicoId);
+                    if (is_null($servico)) {
+                        continue;
+                    }
+                    $this->ordemServicoRepository
+                        ->assignServicoToOrdem(
+                            $order->id,
+                            $servico->id,
+                            $servico->valor
+                        );
                 }
             }
 
             if (isset($data['produtos']) && is_array($data['produtos'])) {
                 foreach ($data['produtos'] as $produtoId) {
-                    $this->ordemProdutoRepository->assignProdutoToOrdem($order->id, $produtoId);
+                    $produto = $this->ordemProdutoRepository->loadProductByProductUuid($produtoId);
+                    if (is_null($produto)) {
+                        continue;
+                    }
+                    $this->ordemProdutoRepository
+                        ->assignProdutoToOrdem(
+                            $order->id,
+                            $produto->id,
+                            $produto->preco,
+                            1
+                        );
                 }
             }
 
+            $this->conn->commit();
             return $this->findByUuid($order->uuid);
         } catch (\Throwable $th) {
+            dd($th->getMessage());
+            $this->conn->rollBack();
             return null;
         }
     }
@@ -84,19 +123,19 @@ class OrdemRepository extends Singleton implements IOrdemRepository
     public function update(int $id, array $data)
     {
         if (empty($data)) {
-            return false;
+            return null;
         }
 
         try {
             $order = $this->findById($id);
             if (is_null($order)) {
-                return false;
+                return null;
             }
 
-            $updated = $this->save($order->id, $data);
+            $updated = $this->save($data, $order);
 
             if (!$updated) {
-                return false;
+                return null;
             }
 
             if (isset($data['servicos']) && is_array($data['servicos'])) {
@@ -105,7 +144,16 @@ class OrdemRepository extends Singleton implements IOrdemRepository
 
                 foreach ($data['servicos'] as $servicoId) {
                     if (!in_array($servicoId, $existingServicoIds)) {
-                        $this->ordemServicoRepository->assignServicoToOrdem($order->id, $servicoId);
+                        $servico = $this->ordemServicoRepository->loadServiceByServiceUuid($servicoId);
+                        if (is_null($servico)) {
+                            continue;
+                        }
+                        $this->ordemServicoRepository
+                            ->assignServicoToOrdem(
+                                $order->id,
+                                $servico->id,
+                                $servico->valor
+                            );
                     }
                 }
 
@@ -122,7 +170,17 @@ class OrdemRepository extends Singleton implements IOrdemRepository
 
                 foreach ($data['produtos'] as $produtoId) {
                     if (!in_array($produtoId, $existingProdutoIds)) {
-                        $this->ordemProdutoRepository->assignProdutoToOrdem($order->id, $produtoId);
+                        $produto = $this->ordemProdutoRepository->loadProductByProductUuid($produtoId);
+                        if (is_null($produto)) {
+                            continue;
+                        }
+                        $this->ordemProdutoRepository
+                            ->assignProdutoToOrdem(
+                                $order->id,
+                                $produto->id,
+                                $produto->preco,
+                                1
+                            );
                     }
                 }
 
@@ -135,7 +193,8 @@ class OrdemRepository extends Singleton implements IOrdemRepository
 
             return $this->findById($id);
         } catch (\Throwable $th) {
-            return false;
+            dd($th->getMessage());
+            return null;
         }
     }
 
@@ -152,15 +211,8 @@ class OrdemRepository extends Singleton implements IOrdemRepository
         }
 
         if (isset($order->id)) {
-            $servicos = $this->ordemServicoRepository->listServicosByOrdem($order->id);
-            foreach ($servicos as $servico) {
-                $this->ordemServicoRepository->removeServicoFromOrdem($order->id, $servico['servico_id']);
-            }
-
-            $produtos = $this->ordemProdutoRepository->listProdutosByOrdem($order->id);
-            foreach ($produtos as $produto) {
-                $this->ordemProdutoRepository->removeProdutoFromOrdem($order->id, $produto['produto_id']);
-            }
+            $this->ordemServicoRepository->deleteByOrdemId($order->id);
+            $this->ordemProdutoRepository->deleteByOrdemId($order->id);
         }
 
         return $this->toDelete($order->id);

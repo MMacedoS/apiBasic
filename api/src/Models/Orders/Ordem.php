@@ -11,7 +11,7 @@ class Ordem
 
     public const TABLE = 'service_orders';
 
-    public int $id;
+    public ?int $id = null;
     public string $uuid;
     public int $customer_id;
     public ?string $data_abertura;

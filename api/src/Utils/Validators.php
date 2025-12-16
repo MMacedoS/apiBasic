@@ -2,7 +2,10 @@
 
 namespace App\Utils;
 
+use App\Repositories\Entities\Orders\OrdemRepository;
 use App\Repositories\Entities\Person\PessoaRepository;
+use App\Repositories\Entities\Products\ProdutoRepository;
+use App\Repositories\Entities\Services\ServiceRepository;
 use App\Repositories\Entities\Users\UserRepository;
 
 trait Validators
@@ -415,6 +418,22 @@ trait Validators
 
         if ($table === 'persons') {
             return PessoaRepository::getInstance();
+        }
+
+        if ($table === 'products') {
+            return ProdutoRepository::getInstance();
+        }
+
+        if ($table === 'services') {
+            return ServiceRepository::getInstance();
+        }
+
+        if ($table === 'customers') {
+            return PessoaRepository::getInstance();
+        }
+
+        if ($table === 'orders') {
+            return OrdemRepository::getInstance();
         }
 
         return null;

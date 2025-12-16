@@ -21,7 +21,7 @@ class ProdutoRepository extends Singleton implements IProdutoRepository
 
     public function getProdutosByCategory(string $categoryId): array
     {
-        $query = "SELECT * FROM produtos WHERE category_id = :category_id";
+        $query = "SELECT * FROM {$this->model->getTable()} WHERE category_id = :category_id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':category_id', $categoryId);
         $stmt->execute();
@@ -30,7 +30,7 @@ class ProdutoRepository extends Singleton implements IProdutoRepository
 
     public function getProdutosByPriceRange(float $minPrice, float $maxPrice): array
     {
-        $query = "SELECT * FROM produtos WHERE price BETWEEN :min_price AND :max_price";
+        $query = "SELECT * FROM {$this->model->getTable()} WHERE price BETWEEN :min_price AND :max_price";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':min_price', $minPrice);
         $stmt->bindParam(':max_price', $maxPrice);
@@ -40,7 +40,7 @@ class ProdutoRepository extends Singleton implements IProdutoRepository
 
     public function updateProdutoStock(int $produtoId, int $newStock): bool
     {
-        $query = "UPDATE produtos SET stock = :stock WHERE id = :id";
+        $query = "UPDATE {$this->model->getTable()} SET stock = :stock WHERE id = :id";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':stock', $newStock);
         $stmt->bindParam(':id', $produtoId);
@@ -97,7 +97,7 @@ class ProdutoRepository extends Singleton implements IProdutoRepository
             return false;
         }
 
-        return $this->toDelete($produto);
+        return $this->toDelete($produto->id);
     }
 
     public function reduceStock(int $produtoId, int $quantity): bool
@@ -123,7 +123,7 @@ class ProdutoRepository extends Singleton implements IProdutoRepository
 
     public function searchProdutosByName(string $name): array
     {
-        $query = "SELECT * FROM produtos WHERE name LIKE :name";
+        $query = "SELECT * FROM {$this->model->getTable()} WHERE name LIKE :name";
         $stmt = $this->conn->prepare($query);
         $likeName = '%' . $name . '%';
         $stmt->bindParam(':name', $likeName);

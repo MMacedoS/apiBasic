@@ -42,10 +42,14 @@ class TokenRepository extends Singleton
 
     public function delete(string $token)
     {
+        if (empty($token)) {
+            return false;
+        }
+
         try {
             $query = "DELETE FROM {$this->model->getTable()} WHERE token = :token";
             $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':token', $token);
+            $stmt->bindValue(':token', $token, \PDO::PARAM_STR);
             return $stmt->execute();
         } catch (\PDOException $e) {
             return false;
