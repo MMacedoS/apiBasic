@@ -181,7 +181,7 @@ class UserController extends Controller
 
         $user = $this->userTransformer->transform($user);
 
-        $token = JWT::generateToken((array)$user, 3600);
+        $token = JWT::generateToken((array)$user, 30600);
 
         return $this->respondJson([
             'message' => 'Autenticação bem-sucedida',

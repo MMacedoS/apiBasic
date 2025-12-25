@@ -2,6 +2,7 @@
 
 namespace App\Config;
 
+use App\Models\Sales\Venda;
 use App\Repositories\Contracts\Customers\IClienteRepository;
 use App\Repositories\Contracts\Employees\IFuncionarioRepository;
 use App\Repositories\Contracts\Orders\IOrdemProdutoRepository;
@@ -9,6 +10,8 @@ use App\Repositories\Contracts\Orders\IOrdemRepository;
 use App\Repositories\Contracts\Orders\IOrdemServicoRepository;
 use App\Repositories\Contracts\Person\IPessoaRepository;
 use App\Repositories\Contracts\Products\IProdutoRepository;
+use App\Repositories\Contracts\Sales\IItemsVendaRepository;
+use App\Repositories\Contracts\Sales\IVendaRepository;
 use App\Repositories\Contracts\Services\IServiceRepository;
 use App\Repositories\Contracts\Users\IUserRepository;
 use App\Repositories\Entities\Customers\ClienteRepository;
@@ -18,6 +21,8 @@ use App\Repositories\Entities\Orders\OrdemRepository;
 use App\Repositories\Entities\Orders\OrdemServicoRepository;
 use App\Repositories\Entities\Person\PessoaRepository;
 use App\Repositories\Entities\Products\ProdutoRepository;
+use App\Repositories\Entities\Sales\ItemsVendaRepository;
+use App\Repositories\Entities\Sales\VendaRepository;
 use App\Repositories\Entities\Services\ServiceRepository;
 use App\Repositories\Entities\Users\UserRepository;
 
@@ -34,5 +39,7 @@ class AppProvider
         $container->set(IOrdemServicoRepository::class, OrdemServicoRepository::getInstance());
         $container->set(IOrdemProdutoRepository::class, OrdemProdutoRepository::getInstance());
         $container->set(IProdutoRepository::class, ProdutoRepository::getInstance());
+        $container->set(IVendaRepository::class, VendaRepository::getInstance());
+        $container->set(IItemsVendaRepository::class, ItemsVendaRepository::getInstance());
     }
 }

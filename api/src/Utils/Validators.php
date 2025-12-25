@@ -23,13 +23,48 @@ trait Validators
     {
         $this->data = $data;
         foreach ($rules as $field => $ruleSet) {
-            $rulesArray = explode('|', $ruleSet);
-            foreach ($rulesArray as $rule) {
-                $this->applyRule($field, $rule);
+            if (strpos($field, '.*') !== false) {
+                $this->validateArray($field, $ruleSet);
+            } else {
+                $rulesArray = explode('|', $ruleSet);
+                foreach ($rulesArray as $rule) {
+                    $this->applyRule($field, $rule);
+                }
             }
         }
 
         return empty($this->errors) ? $data : null;
+    }
+
+    protected function validateArray($field, $ruleSet)
+    {
+        // Extrair o campo do array e o campo aninhado
+        // Ex: "itens.*.produto_id" -> array: "itens", nested: "produto_id"
+        $parts = explode('.*.', $field);
+        $arrayField = $parts[0];
+        $nestedField = $parts[1] ?? null;
+
+        if (!isset($this->data[$arrayField]) || !is_array($this->data[$arrayField])) {
+            return;
+        }
+
+        // Validar cada item do array
+        foreach ($this->data[$arrayField] as $index => $item) {
+            $fieldKey = "{$arrayField}.{$index}.{$nestedField}";
+            $value = $item[$nestedField] ?? null;
+
+            // Criar um contexto temporário para validação do item
+            $originalData = $this->data;
+            $this->data[$fieldKey] = $value;
+
+            $rulesArray = explode('|', $ruleSet);
+            foreach ($rulesArray as $rule) {
+                $this->applyRule($fieldKey, $rule);
+            }
+
+            // Restaurar dados originais
+            $this->data = $originalData;
+        }
     }
 
     protected function applyRule($field, $rule)
@@ -44,7 +79,7 @@ trait Validators
 
     protected function required($field)
     {
-        if (empty($this->data) || empty($this->data[$field])) {
+        if (!isset($this->data[$field]) || $this->data[$field] === '' || $this->data[$field] === null) {
             $this->errors[$field][] = "O campo $field é obrigatório.";
         }
     }
@@ -61,15 +96,29 @@ trait Validators
         }
 
         if ($this->opcional && !isset($this->data[$field])) {
-            if (strlen((string)$this->data[$field]) < $min) {
-                $this->errors[$field][] = "O campo $field deve ter no mínimo $min caracteres.";
-            }
-
             return;
         }
 
-        if (!isset($this->data[$field]) || strlen((string)$this->data[$field]) < $min) {
-            $this->errors[$field][] = "O campo $field deve ter no mínimo $min caracteres.";
+        $value = $this->data[$field];
+
+        // Se for array, validar tamanho do array
+        if (is_array($value)) {
+            if (count($value) < $min) {
+                $this->errors[$field][] = "O campo $field deve ter no mínimo $min itens.";
+            }
+            return;
+        }
+
+        // Verificar se é um número (integer ou float)
+        if (is_numeric($value)) {
+            if ($value < $min) {
+                $this->errors[$field][] = "O campo $field deve ser no mínimo $min.";
+            }
+        } else {
+            // Validação de comprimento para strings
+            if (strlen((string)$value) < $min) {
+                $this->errors[$field][] = "O campo $field deve ter no mínimo $min caracteres.";
+            }
         }
     }
 
@@ -80,14 +129,30 @@ trait Validators
         }
 
         if ($this->opcional && !isset($this->data[$field])) {
-            if (strlen((string)$this->data[$field]) > $max) {
-                $this->errors[$field][] = "Este campo deve ter no máximo $max caracteres.";
-            }
             return;
         }
 
-        if (isset($this->data[$field]) && strlen((string)$this->data[$field]) > $max) {
-            $this->errors[$field][] = "Este campo deve ter no máximo $max caracteres.";
+        $value = $this->data[$field];
+
+        // Se for array, validar tamanho do array
+        if (is_array($value)) {
+            if (count($value) > $max) {
+                $this->errors[$field][] = "O campo $field deve ter no máximo $max itens.";
+            }
+            $this->opcional = false;
+            return;
+        }
+
+        // Verificar se é um número (integer ou float)
+        if (is_numeric($value)) {
+            if ($value > $max) {
+                $this->errors[$field][] = "O campo $field deve ser no máximo $max.";
+            }
+        } else {
+            // Validação de comprimento para strings
+            if (strlen((string)$value) > $max) {
+                $this->errors[$field][] = "Este campo deve ter no máximo $max caracteres.";
+            }
         }
         $this->opcional = false;
     }
@@ -284,7 +349,12 @@ trait Validators
             return;
         }
 
-        if (!isset($this->data[$field]) || !is_array($this->data[$field])) {
+        if (!isset($this->data[$field])) {
+            $this->errors[$field][] = "O campo $field não pode estar vazio.";
+            return;
+        }
+
+        if (!is_array($this->data[$field])) {
             $this->errors[$field][] = "O campo $field deve ser um array.";
             return;
         }
